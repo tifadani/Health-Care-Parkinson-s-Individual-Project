@@ -156,75 +156,13 @@ if not st.session_state.authenticated:
 # ─────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    """
-    Load from uploaded CSV or generate synthetic data matching Kaggle dataset schema.
-    To use real data: replace this function with pd.read_csv("parkinsons_disease_data.csv")
-    """
-    np.random.seed(42)
-    n = 2105
-
-    age = np.random.randint(50, 91, n)
-    gender = np.random.choice(["Male", "Female"], n, p=[0.55, 0.45])
-    ethnicity = np.random.choice(["Caucasian", "African American", "Asian", "Other"], n, p=[0.6, 0.15, 0.15, 0.1])
-    education = np.random.choice(["None", "High School", "Bachelor's", "Higher"], n, p=[0.1, 0.35, 0.35, 0.2])
-    bmi = np.round(np.random.normal(27, 5, n), 1).clip(15, 45)
-    smoking = np.random.choice([0, 1], n, p=[0.7, 0.3])
-    alcohol = np.random.choice([0, 1], n, p=[0.6, 0.4])
-    physical_activity = np.round(np.random.uniform(0, 10, n), 1)
-    diet_quality = np.round(np.random.uniform(0, 10, n), 1)
-    sleep_quality = np.round(np.random.uniform(4, 10, n), 1)
-    family_history = np.random.choice([0, 1], n, p=[0.75, 0.25])
-    traumatic_brain = np.random.choice([0, 1], n, p=[0.85, 0.15])
-    hypertension = np.random.choice([0, 1], n, p=[0.65, 0.35])
-    diabetes = np.random.choice([0, 1], n, p=[0.8, 0.2])
-    depression = np.random.choice([0, 1], n, p=[0.7, 0.3])
-    stroke = np.random.choice([0, 1], n, p=[0.9, 0.1])
-
-    cholesterol_total = np.round(np.random.normal(200, 30, n), 1).clip(100, 300)
-    cholesterol_ldl = np.round(np.random.normal(120, 25, n), 1).clip(50, 200)
-    cholesterol_hdl = np.round(np.random.normal(55, 15, n), 1).clip(20, 100)
-    cholesterol_trig = np.round(np.random.normal(150, 50, n), 1).clip(50, 400)
-
-    updrs = np.round(np.random.normal(50, 30, n), 1).clip(0, 199)
-    moca = np.round(np.random.normal(22, 5, n), 1).clip(0, 30)
-    functional = np.round(np.random.uniform(0, 10, n), 1)
-    tremor = np.random.choice([0, 1], n, p=[0.45, 0.55])
-    rigidity = np.random.choice([0, 1], n, p=[0.5, 0.5])
-    bradykinesia = np.random.choice([0, 1], n, p=[0.48, 0.52])
-    postural = np.random.choice([0, 1], n, p=[0.55, 0.45])
-    speech = np.random.choice([0, 1], n, p=[0.6, 0.4])
-    sleep_disorders = np.random.choice([0, 1], n, p=[0.65, 0.35])
-    constipation = np.random.choice([0, 1], n, p=[0.7, 0.3])
-
-    # Diagnosis influenced by risk factors
-    risk_score = (
-        (age > 65).astype(int) * 2 +
-        family_history * 3 +
-        traumatic_brain * 2 +
-        (updrs > 60).astype(int) * 2 +
-        tremor + rigidity + bradykinesia + postural +
-        depression + (moca < 20).astype(int)
-    )
-    diagnosis_prob = 1 / (1 + np.exp(-(risk_score - 8) * 0.3))
-    diagnosis = (np.random.random(n) < diagnosis_prob).astype(int)
-
-    df = pd.DataFrame({
-        "PatientID": range(3058, 3058 + n),
-        "Age": age, "Gender": gender, "Ethnicity": ethnicity,
-        "EducationLevel": education, "BMI": bmi,
-        "Smoking": smoking, "AlcoholConsumption": alcohol,
-        "PhysicalActivity": physical_activity, "DietQuality": diet_quality,
-        "SleepQuality": sleep_quality, "FamilyHistoryParkinsons": family_history,
-        "TraumaticBrainInjury": traumatic_brain, "Hypertension": hypertension,
-        "Diabetes": diabetes, "Depression": depression, "Stroke": stroke,
-        "CholesterolTotal": cholesterol_total, "CholesterolLDL": cholesterol_ldl,
-        "CholesterolHDL": cholesterol_hdl, "CholesterolTriglycerides": cholesterol_trig,
-        "UPDRS": updrs, "MoCA": moca, "FunctionalAssessment": functional,
-        "Tremor": tremor, "Rigidity": rigidity, "Bradykinesia": bradykinesia,
-        "PosturalInstability": postural, "SpeechProblems": speech,
-        "SleepDisorders": sleep_disorders, "Constipation": constipation,
-        "Diagnosis": diagnosis
-    })
+    df = pd.read_csv("parkinsons_disease_data.csv")
+    # Map numeric Gender to labels
+    df["Gender"] = df["Gender"].map({0: "Male", 1: "Female"})
+    # Map numeric Ethnicity to labels
+    df["Ethnicity"] = df["Ethnicity"].map({0: "Caucasian", 1: "African American", 2: "Asian", 3: "Other"})
+    # Map numeric EducationLevel to labels
+    df["EducationLevel"] = df["EducationLevel"].map({0: "None", 1: "High School", 2: "Bachelor's", 3: "Higher"})
     return df
 
 df = load_data()
