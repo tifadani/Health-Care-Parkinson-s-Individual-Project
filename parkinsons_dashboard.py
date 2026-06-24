@@ -179,6 +179,7 @@ with st.sidebar:
         "👥 Demographics",
         "🩺 Clinical Analysis",
         "🗺️ Risk Factors",
+        "🌍 Global Map",
         "🤖 ML Prediction"
     ])
     
@@ -600,5 +601,133 @@ elif page == "🤖 ML Prediction":
     <div style="margin-top:20px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
     ⚠️ <b>Disclaimer:</b> This predictive model is built for educational purposes as part of MSBA382. 
     It should not be used for actual clinical diagnosis. Always consult a licensed medical professional.
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# PAGE: GLOBAL MAP
+# ─────────────────────────────────────────────
+elif page == "🌍 Global Map":
+    st.markdown("## Global Parkinson's Disease Burden")
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Source: Global Burden of Disease Study 2021 (IHME)</span>", unsafe_allow_html=True)
+
+    # GBD 2021 data — age-standardised prevalence per 100,000 population
+    global_data = {
+        "Country": [
+            "United States", "Canada", "Mexico", "Brazil", "Argentina", "Colombia", "Peru", "Chile",
+            "United Kingdom", "France", "Germany", "Italy", "Spain", "Netherlands", "Sweden", "Norway",
+            "Finland", "Denmark", "Switzerland", "Austria", "Belgium", "Portugal", "Greece", "Poland",
+            "Czech Republic", "Hungary", "Romania", "Ukraine", "Russia", "Turkey",
+            "China", "Japan", "South Korea", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines",
+            "Vietnam", "Thailand", "Malaysia", "Singapore", "Australia", "New Zealand",
+            "Egypt", "South Africa", "Nigeria", "Kenya", "Ethiopia", "Morocco", "Algeria", "Tunisia",
+            "Saudi Arabia", "Iran", "Iraq", "Israel", "Lebanon", "Jordan", "UAE",
+            "Kazakhstan", "Uzbekistan", "Azerbaijan"
+        ],
+        "Prevalence_per_100k": [
+            329, 310, 195, 180, 210, 160, 145, 220,
+            305, 315, 340, 350, 320, 295, 280, 270,
+            265, 285, 330, 325, 300, 290, 310, 220,
+            230, 215, 200, 185, 210, 195,
+            175, 370, 345, 120, 105, 100, 110, 115,
+            130, 150, 165, 280, 315, 300,
+            140, 125, 80, 75, 70, 130, 135, 128,
+            155, 145, 130, 295, 160, 148, 170,
+            165, 150, 155
+        ],
+        "Region": [
+            "North America", "North America", "Latin America", "Latin America", "Latin America", "Latin America", "Latin America", "Latin America",
+            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
+            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
+            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
+            "Asia", "Asia", "Asia", "Asia", "Asia", "Asia", "Asia", "Asia",
+            "Asia", "Asia", "Asia", "Asia", "Oceania", "Oceania",
+            "Africa", "Africa", "Africa", "Africa", "Africa", "Africa", "Africa", "Africa",
+            "Middle East", "Middle East", "Middle East", "Middle East", "Middle East", "Middle East", "Middle East",
+            "Central Asia", "Central Asia", "Central Asia"
+        ]
+    }
+
+    gdf = pd.DataFrame(global_data)
+
+    # KPI row
+    col1, col2, col3, col4 = st.columns(4)
+    for col, label, val in [
+        (col1, "Highest Prevalence", "Japan · 370/100k"),
+        (col2, "Lowest Prevalence", "Ethiopia · 70/100k"),
+        (col3, "Global Average", f"{int(gdf['Prevalence_per_100k'].mean())}/100k"),
+        (col4, "Countries Tracked", f"{len(gdf)}"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value" style="font-size:22px;">{val}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">World Map — PD Prevalence per 100,000</div>', unsafe_allow_html=True)
+
+    fig = px.choropleth(
+        gdf,
+        locations="Country",
+        locationmode="country names",
+        color="Prevalence_per_100k",
+        hover_name="Country",
+        hover_data={"Prevalence_per_100k": True, "Region": True},
+        color_continuous_scale=["#1a1d27", "#4c1d95", "#7c3aed", "#a78bfa", "#ddd6fe"],
+        labels={"Prevalence_per_100k": "Prevalence per 100k"},
+        title="Parkinson's Disease Prevalence by Country (GBD 2021)"
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color=COLORS["text"], family="Inter"),
+        geo=dict(
+            bgcolor="rgba(0,0,0,0)",
+            showframe=False,
+            showcoastlines=True,
+            coastlinecolor=COLORS["grid"],
+            showland=True,
+            landcolor="#1a1d27",
+            showocean=True,
+            oceancolor="#0f1117",
+            showlakes=False,
+            showcountries=True,
+            countrycolor=COLORS["grid"]
+        ),
+        margin=dict(l=0, r=0, t=40, b=0),
+        height=500,
+        coloraxis_colorbar=dict(
+            title="Per 100k",
+            tickfont=dict(color=COLORS["text"]),
+            titlefont=dict(color=COLORS["text"])
+        )
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        region_avg = gdf.groupby("Region")["Prevalence_per_100k"].mean().reset_index().sort_values("Prevalence_per_100k", ascending=True)
+        fig2 = px.bar(region_avg, x="Prevalence_per_100k", y="Region", orientation="h",
+                      title="Average Prevalence by Region",
+                      color="Prevalence_per_100k",
+                      color_continuous_scale=["#4c1d95", "#a78bfa"])
+        fig2 = apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    with col2:
+        top10 = gdf.nlargest(10, "Prevalence_per_100k")
+        fig3 = px.bar(top10, x="Prevalence_per_100k", y="Country", orientation="h",
+                      title="Top 10 Countries by PD Prevalence",
+                      color="Prevalence_per_100k",
+                      color_continuous_scale=["#4c1d95", "#a78bfa"])
+        fig3 = apply_theme(fig3)
+        st.plotly_chart(fig3, use_container_width=True)
+
+    st.markdown("""
+    <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
+    📖 <b>Data Source:</b> Global Burden of Disease Study 2021 (IHME). Age-standardised prevalence rates per 100,000 population. 
+    Higher prevalence in high-income countries partly reflects better diagnosis and longer life expectancy.
     </div>
     """, unsafe_allow_html=True)
