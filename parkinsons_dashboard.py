@@ -684,15 +684,9 @@ elif page == "🌍 Global Map":
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color=COLORS["text"], family="Inter"),
         geo=dict(
-            bgcolor="rgba(0,0,0,0)",
             showframe=False,
             showcoastlines=True,
             coastlinecolor=COLORS["grid"],
-            showland=True,
-            landcolor="#1a1d27",
-            showocean=True,
-            oceancolor="#0f1117",
-            showlakes=False,
             showcountries=True,
             countrycolor=COLORS["grid"]
         ),
