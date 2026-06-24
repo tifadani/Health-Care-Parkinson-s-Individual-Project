@@ -621,7 +621,7 @@ elif page == "🌍 Global Map":
             "China", "Japan", "South Korea", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines",
             "Vietnam", "Thailand", "Malaysia", "Singapore", "Australia", "New Zealand",
             "Egypt", "South Africa", "Nigeria", "Kenya", "Ethiopia", "Morocco", "Algeria", "Tunisia",
-            "Saudi Arabia", "Iran", "Iraq", "Israel", "Lebanon", "Jordan", "UAE",
+            "Saudi Arabia", "Iran", "Iraq", "Palestine", "Lebanon", "Jordan", "UAE",
             "Kazakhstan", "Uzbekistan", "Azerbaijan"
         ],
         "Prevalence_per_100k": [
