@@ -668,36 +668,15 @@ elif page == "🌍 Global Map":
 
     st.markdown('<div class="section-header">World Map — PD Prevalence per 100,000</div>', unsafe_allow_html=True)
 
-    fig = px.choropleth(
-        gdf,
-        locations="Country",
-        locationmode="country names",
-        color="Prevalence_per_100k",
-        hover_name="Country",
-        hover_data={"Prevalence_per_100k": True, "Region": True},
-        color_continuous_scale=["#1a1d27", "#4c1d95", "#7c3aed", "#a78bfa", "#ddd6fe"],
-        labels={"Prevalence_per_100k": "Prevalence per 100k"},
-        title="Parkinson's Disease Prevalence by Country (GBD 2021)"
-    )
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=COLORS["text"], family="Inter"),
-        geo=dict(
-            showframe=False,
-            showcoastlines=True,
-            coastlinecolor=COLORS["grid"],
-            showcountries=True,
-            countrycolor=COLORS["grid"]
-        ),
-        margin=dict(l=0, r=0, t=40, b=0),
-        height=500,
-        coloraxis_colorbar=dict(
-            title="Per 100k",
-            tickfont=dict(color=COLORS["text"]),
-            titlefont=dict(color=COLORS["text"])
-        )
-    )
+    # Top 20 countries bar chart instead of choropleth
+    top20 = gdf.nlargest(20, "Prevalence_per_100k").sort_values("Prevalence_per_100k", ascending=True)
+    fig = px.bar(top20, x="Prevalence_per_100k", y="Country", orientation="h",
+                 color="Prevalence_per_100k",
+                 color_continuous_scale=["#4c1d95", "#7c3aed", "#a78bfa"],
+                 labels={"Prevalence_per_100k": "Prevalence per 100,000"},
+                 title="Top 20 Countries by PD Prevalence per 100,000 (GBD 2021)")
+    fig = apply_theme(fig)
+    fig.update_layout(height=550, showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
     col1, col2 = st.columns(2)
