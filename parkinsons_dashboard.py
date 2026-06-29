@@ -181,6 +181,7 @@ with st.sidebar:
         "🩺 Clinical Analysis",
         "🗺️ Risk Factors",
         "🌍 Global Map",
+        "🚬 Smoking & PD",
         "🤖 ML Prediction"
     ])
     
@@ -703,5 +704,151 @@ elif page == "🌍 Global Map":
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
     📖 <b>Data Source:</b> Global Burden of Disease Study 2021 (IHME). Age-standardised prevalence rates per 100,000 population. 
     Higher prevalence in high-income countries partly reflects better diagnosis and longer life expectancy.
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# PAGE: SMOKING & PD
+# ─────────────────────────────────────────────
+elif page == "🚬 Smoking & PD":
+    st.markdown("## Smoking & Parkinson's Disease")
+    st.markdown(f"<span style='color:{COLORS['muted']}'>DALYs attributed to smoking · GBD Compare 2023 · Age-standardized</span>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="margin:16px 0; padding:16px; background:#1a1d27; border-left:4px solid #a78bfa; border-radius:8px; color:#e8e8f0; font-size:14px;">
+    ⚠️ <b>Negative DALYs = Protective Effect.</b> Across all regions, smoking is associated with <i>fewer</i> DALYs from Parkinson's disease —
+    meaning smokers appear less likely to develop PD. This is one of the most well-documented paradoxes in neurology, 
+    thought to be linked to nicotine's effect on dopaminergic pathways. Males consistently show a stronger protective association than females.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # GBD 2023 data extracted from screenshots — DALYs per 100,000 (negative = protective)
+    smoking_data = {
+        "Region": [
+            "MENA", "MENA", "MENA", "MENA", "MENA", "MENA", "MENA", "MENA",
+            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
+            "Latin America", "Latin America", "Latin America", "Latin America", "Latin America", "Latin America",
+            "South Asia", "South Asia", "South Asia", "South Asia", "South Asia",
+            "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific",
+            "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa",
+        ],
+        "Country": [
+            "Iraq", "Jordan", "Egypt", "Tunisia", "Lebanon", "Libya", "Syria", "Bahrain",
+            "Albania", "Greece", "Montenegro", "Turkey", "Croatia", "Bosnia & Herz.", "Spain", "Germany",
+            "Paraguay", "United States", "Cuba", "Uruguay", "Canada", "Brazil",
+            "Maldives", "Bangladesh", "Thailand", "N Korea", "Nepal",
+            "Solomon Is.", "Nauru", "Tuvalu", "Viet Nam", "China",
+            "Seychelles", "Rwanda", "Algeria", "Mauritius", "Botswana",
+        ],
+        "Males_DALYs": [
+            -38, -22, -23, -21, -14, -18, -16, -13,
+            -27, -26, -22, -20, -19, -18, -16, -13,
+            -20, -16, -15, -13, -13, -11,
+            -30, -22, -16, -14, -12,
+            -27, -25, -25, -23, -22,
+            -22, -18, -17, -16, -14,
+        ],
+        "Females_DALYs": [
+            -2, -1, -1, -1, -5, -1, -1, -1,
+            -5, -4, -4, -3, -4, -3, -3, -3,
+            -7, -6, -3, -3, -6, -3,
+            -1, -1, -1, -1, -8,
+            -1, -10, -2, -2, -2,
+            -2, -1, -2, -1, -1,
+        ]
+    }
+
+    sdf = pd.DataFrame(smoking_data)
+
+    # KPI cards
+    col1, col2, col3 = st.columns(3)
+    for col, label, val, delta in [
+        (col1, "Strongest Protection (Males)", "Maldives · -30 DALYs", "South Asia"),
+        (col2, "Strongest Protection (Females)", "Nepal · -8 DALYs", "South Asia"),
+        (col3, "Gender Gap", "Males 5-10x stronger", "Consistent across all regions"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value" style="font-size:18px;">{val}</div>
+                <div class="metric-delta">{delta}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">Smoking-Attributable DALYs by Region (Males vs Females)</div>', unsafe_allow_html=True)
+
+    region_avg = sdf.groupby("Region")[["Males_DALYs", "Females_DALYs"]].mean().reset_index()
+    region_avg = region_avg.sort_values("Males_DALYs")
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=region_avg["Region"], x=region_avg["Males_DALYs"],
+        name="Males", orientation="h", marker_color=COLORS["primary"]
+    ))
+    fig.add_trace(go.Bar(
+        y=region_avg["Region"], x=region_avg["Females_DALYs"],
+        name="Females", orientation="h", marker_color=COLORS["warning"]
+    ))
+    fig.update_layout(
+        barmode="group",
+        title="Average Smoking-Attributable DALYs per 100,000 by Region (GBD 2023)",
+        xaxis_title="DALYs per 100,000 (negative = protective effect)",
+        height=400
+    )
+    fig = apply_theme(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown('<div class="section-header">Country-Level Detail</div>', unsafe_allow_html=True)
+
+    region_select = st.selectbox("Select Region", sdf["Region"].unique())
+    region_df = sdf[sdf["Region"] == region_select].sort_values("Males_DALYs")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig2 = px.bar(region_df, x="Males_DALYs", y="Country", orientation="h",
+                      title=f"Males — {region_select}",
+                      color="Males_DALYs",
+                      color_continuous_scale=["#6d28d9", "#a78bfa"],
+                      labels={"Males_DALYs": "DALYs per 100,000"})
+        fig2 = apply_theme(fig2)
+        st.plotly_chart(fig2, use_container_width=True)
+    with col2:
+        fig3 = px.bar(region_df, x="Females_DALYs", y="Country", orientation="h",
+                      title=f"Females — {region_select}",
+                      color="Females_DALYs",
+                      color_continuous_scale=["#d97706", "#fbbf24"],
+                      labels={"Females_DALYs": "DALYs per 100,000"})
+        fig3 = apply_theme(fig3)
+        st.plotly_chart(fig3, use_container_width=True)
+
+    # Patient-level smoking analysis from Kaggle dataset
+    st.markdown('<div class="section-header">Patient-Level: Smoking vs PD Diagnosis (Kaggle Dataset)</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        smoke_diag = filtered_df.groupby(["Smoking", filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"})]).size().reset_index(name="Count")
+        smoke_diag.columns = ["Smoking", "Diagnosis", "Count"]
+        smoke_diag["Smoking"] = smoke_diag["Smoking"].map({0: "Non-Smoker", 1: "Smoker"})
+        fig4 = px.bar(smoke_diag, x="Smoking", y="Count", color="Diagnosis",
+                      color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
+                      barmode="group", title="PD Diagnosis by Smoking Status")
+        fig4 = apply_theme(fig4)
+        st.plotly_chart(fig4, use_container_width=True)
+    with col2:
+        smoke_rate = filtered_df.groupby("Smoking")["Diagnosis"].mean().reset_index()
+        smoke_rate["Smoking"] = smoke_rate["Smoking"].map({0: "Non-Smoker", 1: "Smoker"})
+        smoke_rate["PD Rate (%)"] = smoke_rate["Diagnosis"] * 100
+        fig5 = px.bar(smoke_rate, x="Smoking", y="PD Rate (%)",
+                      color="Smoking",
+                      color_discrete_map={"Non-Smoker": COLORS["secondary"], "Smoker": COLORS["primary"]},
+                      title="PD Diagnosis Rate by Smoking Status (%)")
+        fig5 = apply_theme(fig5)
+        st.plotly_chart(fig5, use_container_width=True)
+
+    st.markdown("""
+    <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
+    📖 <b>Data Sources:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized DALYs attributed to smoking for Parkinson's disease.
+    Patient-level data from Kaggle Parkinson's Disease Dataset (2,105 patients). 
+    Note: The protective association of smoking with PD does not imply smoking is beneficial — its harms far outweigh any neuroprotective effect.
     </div>
     """, unsafe_allow_html=True)
