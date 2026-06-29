@@ -31,41 +31,42 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
-    .main { background-color: #0f1117; }
+    .main { background-color: #f5f7ff; }
     
     .login-container {
         max-width: 420px;
         margin: 80px auto;
-        background: #1a1d27;
-        border: 1px solid #2d3147;
+        background: #ffffff;
+        border: 1px solid #dde1f0;
         border-radius: 16px;
         padding: 48px 40px;
         text-align: center;
-        box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 40px rgba(0,0,0,0.08);
     }
     .login-title {
         font-family: 'Space Grotesk', sans-serif;
         font-size: 28px;
         font-weight: 700;
-        color: #e8e8f0;
+        color: #1a1a2e;
         margin-bottom: 6px;
     }
     .login-sub {
         font-size: 14px;
-        color: #7a7f9a;
+        color: #6b7280;
         margin-bottom: 32px;
     }
     
     .metric-card {
-        background: #1a1d27;
-        border: 1px solid #2d3147;
+        background: #ffffff;
+        border: 1px solid #dde1f0;
         border-radius: 12px;
         padding: 20px 24px;
         margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .metric-label {
         font-size: 12px;
-        color: #7a7f9a;
+        color: #6b7280;
         text-transform: uppercase;
         letter-spacing: 1px;
         margin-bottom: 6px;
@@ -74,11 +75,11 @@ st.markdown("""
         font-family: 'Space Grotesk', sans-serif;
         font-size: 32px;
         font-weight: 700;
-        color: #a78bfa;
+        color: #6d28d9;
     }
     .metric-delta {
         font-size: 13px;
-        color: #34d399;
+        color: #059669;
         margin-top: 4px;
     }
     
@@ -86,21 +87,21 @@ st.markdown("""
         font-family: 'Space Grotesk', sans-serif;
         font-size: 20px;
         font-weight: 700;
-        color: #e8e8f0;
+        color: #1a1a2e;
         margin: 28px 0 16px 0;
         padding-bottom: 8px;
-        border-bottom: 1px solid #2d3147;
+        border-bottom: 1px solid #dde1f0;
     }
     
-    .stSelectbox > div > div { background-color: #1a1d27 !important; }
-    .stSlider > div { color: #a78bfa; }
+    .stSelectbox > div > div { background-color: #ffffff !important; }
+    .stSlider > div { color: #6d28d9; }
 
-    div[data-testid="stSidebarNav"] { background: #1a1d27; }
-    section[data-testid="stSidebar"] { background: #13151f; border-right: 1px solid #2d3147; }
+    div[data-testid="stSidebarNav"] { background: #ffffff; }
+    section[data-testid="stSidebar"] { background: #f0f2fb; border-right: 1px solid #dde1f0; }
     section[data-testid="stSidebar"] .css-1d391kg { padding: 24px 16px; }
     
     .pred-result-pos {
-        background: linear-gradient(135deg, #1a1d27, #2d1f3d);
+        background: linear-gradient(135deg, #faf5ff, #ede9fe);
         border: 1px solid #7c3aed;
         border-radius: 12px;
         padding: 24px;
@@ -108,7 +109,7 @@ st.markdown("""
         margin-top: 16px;
     }
     .pred-result-neg {
-        background: linear-gradient(135deg, #1a1d27, #1a2d2a);
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
         border: 1px solid #059669;
         border-radius: 12px;
         padding: 24px;
@@ -207,16 +208,16 @@ filtered_df = df[
 # PLOTLY THEME
 # ─────────────────────────────────────────────
 COLORS = {
-    "primary": "#a78bfa",
-    "secondary": "#34d399",
-    "danger": "#f87171",
-    "warning": "#fbbf24",
-    "bg": "#1a1d27",
-    "grid": "#2d3147",
-    "text": "#e8e8f0",
-    "muted": "#7a7f9a"
+    "primary": "#6d28d9",
+    "secondary": "#059669",
+    "danger": "#dc2626",
+    "warning": "#d97706",
+    "bg": "#ffffff",
+    "grid": "#e2e6f0",
+    "text": "#1a1a2e",
+    "muted": "#6b7280"
 }
-PD_COLORS = ["#a78bfa", "#34d399"]
+PD_COLORS = ["#6d28d9", "#059669"]
 
 def apply_theme(fig):
     fig.update_layout(
@@ -312,7 +313,7 @@ elif page == "👥 Demographics":
     with col2:
         eth_diag = filtered_df[filtered_df["Diagnosis"] == 1].groupby("Ethnicity").size().reset_index(name="Count")
         fig = px.bar(eth_diag, x="Ethnicity", y="Count", title="PD Cases by Ethnicity",
-                     color="Count", color_continuous_scale=["#4c1d95", "#a78bfa"])
+                     color="Count", color_continuous_scale=["#5b21b6", "#6d28d9"])
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -385,7 +386,7 @@ elif page == "🩺 Clinical Analysis":
     
     with col2:
         fig = px.scatter(filtered_df[filtered_df["Diagnosis"]==1], x="UPDRS", y="MoCA",
-                         color="Age", color_continuous_scale=["#4c1d95", "#a78bfa", "#f87171"],
+                         color="Age", color_continuous_scale=["#5b21b6", "#6d28d9", "#dc2626"],
                          title="UPDRS vs MoCA (PD Patients)", opacity=0.6)
         fig.update_layout(coloraxis_colorbar=dict(title="Age"))
         fig = apply_theme(fig)
@@ -461,7 +462,7 @@ elif page == "🗺️ Risk Factors":
     with col2:
         corr_cols = ["Age", "BMI", "UPDRS", "MoCA", "FunctionalAssessment", "SleepQuality", "PhysicalActivity", "DietQuality"]
         corr_matrix = filtered_df[corr_cols + ["Diagnosis"]].corr()
-        fig = px.imshow(corr_matrix, color_continuous_scale=["#059669", "#1a1d27", "#7c3aed"],
+        fig = px.imshow(corr_matrix, color_continuous_scale=["#059669", "#f5f7ff", "#6d28d9"],
                         title="Correlation Matrix: Clinical Variables", text_auto=".2f", aspect="auto")
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -520,7 +521,7 @@ elif page == "🤖 ML Prediction":
     with col1:
         fig = px.bar(importance.head(10), x="Importance", y="Feature", orientation="h",
                      title="Top 10 Feature Importances",
-                     color="Importance", color_continuous_scale=["#4c1d95", "#a78bfa"])
+                     color="Importance", color_continuous_scale=["#5b21b6", "#6d28d9"])
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
     
@@ -528,7 +529,7 @@ elif page == "🤖 ML Prediction":
         fig = px.imshow(cm, text_auto=True,
                         labels=dict(x="Predicted", y="Actual", color="Count"),
                         x=["PD Negative", "PD Positive"], y=["PD Negative", "PD Positive"],
-                        color_continuous_scale=["#1a1d27", "#7c3aed"],
+                        color_continuous_scale=["#ede9fe", "#6d28d9"],
                         title="Confusion Matrix")
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -571,8 +572,8 @@ elif page == "🤖 ML Prediction":
         if prediction == 1:
             st.markdown(f"""
             <div class="pred-result-pos">
-                <div class="pred-label" style="color:#a78bfa;">⚠️ PD Positive — High Risk</div>
-                <div style="color:#c4b5fd; margin-top:8px; font-size:15px;">
+                <div class="pred-label" style="color:#6d28d9;">⚠️ PD Positive — High Risk</div>
+                <div style="color:#6d28d9; margin-top:8px; font-size:15px;">
                     Confidence: <b>{probability[1]*100:.1f}%</b> · Clinical review recommended
                 </div>
             </div>
@@ -580,8 +581,8 @@ elif page == "🤖 ML Prediction":
         else:
             st.markdown(f"""
             <div class="pred-result-neg">
-                <div class="pred-label" style="color:#34d399;">✅ PD Negative — Low Risk</div>
-                <div style="color:#6ee7b7; margin-top:8px; font-size:15px;">
+                <div class="pred-label" style="color:#059669;">✅ PD Negative — Low Risk</div>
+                <div style="color:#059669; margin-top:8px; font-size:15px;">
                     Confidence: <b>{probability[0]*100:.1f}%</b> · Continue routine monitoring
                 </div>
             </div>
@@ -672,7 +673,7 @@ elif page == "🌍 Global Map":
     top20 = gdf.nlargest(20, "Prevalence_per_100k").sort_values("Prevalence_per_100k", ascending=True)
     fig = px.bar(top20, x="Prevalence_per_100k", y="Country", orientation="h",
                  color="Prevalence_per_100k",
-                 color_continuous_scale=["#4c1d95", "#7c3aed", "#a78bfa"],
+                 color_continuous_scale=["#5b21b6", "#7c3aed", "#6d28d9"],
                  labels={"Prevalence_per_100k": "Prevalence per 100,000"},
                  title="Top 20 Countries by PD Prevalence per 100,000 (GBD 2021)")
     fig = apply_theme(fig)
@@ -685,7 +686,7 @@ elif page == "🌍 Global Map":
         fig2 = px.bar(region_avg, x="Prevalence_per_100k", y="Region", orientation="h",
                       title="Average Prevalence by Region",
                       color="Prevalence_per_100k",
-                      color_continuous_scale=["#4c1d95", "#a78bfa"])
+                      color_continuous_scale=["#5b21b6", "#6d28d9"])
         fig2 = apply_theme(fig2)
         st.plotly_chart(fig2, use_container_width=True)
 
@@ -694,7 +695,7 @@ elif page == "🌍 Global Map":
         fig3 = px.bar(top10, x="Prevalence_per_100k", y="Country", orientation="h",
                       title="Top 10 Countries by PD Prevalence",
                       color="Prevalence_per_100k",
-                      color_continuous_scale=["#4c1d95", "#a78bfa"])
+                      color_continuous_scale=["#5b21b6", "#6d28d9"])
         fig3 = apply_theme(fig3)
         st.plotly_chart(fig3, use_container_width=True)
 
