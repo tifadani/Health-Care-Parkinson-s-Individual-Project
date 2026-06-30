@@ -605,7 +605,7 @@ elif page == "Global Map":
             "Botswana", "Mauritius", "Seychelles", "South Africa", "Nigeria", "Kenya",
             "Ethiopia", "Rwanda",
             # Europe
-            "Italy", "Occupied Palestine", "Spain", "Turkey", "Greece", "Germany", "France",
+            "Italy", "Israel", "Spain", "Turkey", "Greece", "Germany", "France",
             "United Kingdom", "Sweden", "Switzerland", "Hungary", "Kazakhstan",
             # Americas
             "Brazil", "Paraguay", "United States", "Canada", "Argentina", "Mexico",
@@ -762,6 +762,32 @@ elif page == "Smoking & PD":
                 <div class="metric-delta">{delta}</div>
             </div>
             """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">Tobacco: The Only GBD-Tracked Risk Factor for PD</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <span style='color:{COLORS['muted']}; font-size:14px;'>
+    Across GBD's entire risk factor framework — covering air pollution, high BMI, blood pressure, alcohol, diet, occupational risks, and more — 
+    <b>tobacco is the only risk factor with measurable DALYs for Parkinson's disease</b>, in every single WHO region. This holds true globally, 
+    confirming smoking is uniquely significant in PD research (even though the direction is protective, not harmful).
+    </span>
+    """, unsafe_allow_html=True)
+
+    who_region_data = pd.DataFrame({
+        "WHO Region": ["Western Pacific", "Region of the Americas", "European Region", "Eastern Mediterranean",
+                        "South-East Asia", "African Region"],
+        "Tobacco_DALYs": [-10.3, -6.8, -6.5, -6.3, -5.0, -2.0]
+    }).sort_values("Tobacco_DALYs")
+
+    fig_who = px.bar(who_region_data, x="Tobacco_DALYs", y="WHO Region", orientation="h",
+                      title="Tobacco-Attributable DALYs for PD by WHO Region (GBD 2023) — All Other Risk Factors Show Zero",
+                      color="Tobacco_DALYs",
+                      color_continuous_scale=["#5b21b6", "#a78bfa"],
+                      labels={"Tobacco_DALYs": "DALYs per 100,000 (negative = protective effect)"})
+    fig_who.add_vline(x=0, line_dash="dash", line_color=COLORS["muted"])
+    fig_who = apply_theme(fig_who)
+    fig_who.update_layout(height=350, showlegend=False)
+    st.plotly_chart(fig_who, use_container_width=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>This is also why pesticide exposure — a well-documented PD risk factor in peer-reviewed literature — does not yet appear in GBD's standard risk factor model, which is why we sourced it separately on the Pesticide Exposure page.</span>", unsafe_allow_html=True)
 
     st.markdown('<div class="section-header">Smoking-Attributable DALYs by Region (Males vs Females)</div>', unsafe_allow_html=True)
 
