@@ -605,7 +605,7 @@ elif page == "Global Map":
             "Botswana", "Mauritius", "Seychelles", "South Africa", "Nigeria", "Kenya",
             "Ethiopia", "Rwanda",
             # Europe
-            "Italy", "Israel", "Spain", "Turkey", "Greece", "Germany", "France",
+            "Italy", "Occupied Palestine", "Spain", "Turkey", "Greece", "Germany", "France",
             "United Kingdom", "Sweden", "Switzerland", "Hungary", "Kazakhstan",
             # Americas
             "Brazil", "Paraguay", "United States", "Canada", "Argentina", "Mexico",
