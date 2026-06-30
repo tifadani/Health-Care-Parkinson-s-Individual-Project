@@ -183,6 +183,7 @@ with st.sidebar:
         "Global Map",
         "Smoking & PD",
         "Pesticide Exposure",
+        "Lifestyle Factors",
         "ML Prediction"
     ])
     
@@ -942,5 +943,91 @@ elif page == "Pesticide Exposure":
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
     📖 <b>Data Sources:</b> Tanner et al., family-based case-control study (PMC2323015); Payami et al. and Moura et al., household pesticide studies 
     (PMC11024193); Brazilian occupational cohort study (PMC7298782). Odds ratios and hazard ratios extracted directly from published, peer-reviewed findings.
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# PAGE: LIFESTYLE FACTORS
+# ─────────────────────────────────────────────
+elif page == "Lifestyle Factors":
+    st.markdown("## Lifestyle Factors & Parkinson's Disease")
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Physical activity & sleep · Hazard ratios from peer-reviewed cohort studies</span>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="margin:16px 0; padding:16px; background:#1a1d27; border-left:4px solid #059669; border-radius:8px; color:#e8e8f0; font-size:14px;">
+    ⚠️ <b>Note on the Kaggle dataset.</b> Our clinical sample showed almost no correlation between lifestyle factors (sleep, activity, diet) and PD diagnosis 
+    (all near 0.00). Real large-scale cohort studies, however, show a clear and consistent protective effect of physical activity and healthy sleep — 
+    another example of where peer-reviewed research tells a stronger story than this sample dataset.
+    </div>
+    """, unsafe_allow_html=True)
+
+    lifestyle_data = pd.DataFrame({
+        "Study": [
+            "Overall PA — Pooled Cohort Meta-analysis\n(LaHue et al.)",
+            "High Physical Activity\n(UK Biobank, Chen et al.)",
+            "Ideal Sleep Pattern\n(UK Biobank, Chen et al.)",
+            "High PA + Ideal Sleep (Combined)\n(UK Biobank, Chen et al.)",
+            "High PA at Ages 35-39\n(NIH-AARP Cohort)",
+            "High PA, Past 10 Years\n(NIH-AARP Cohort)",
+            "Active 'Weekend Warrior' Pattern\n(UK Biobank, Tsukita et al.)",
+            "Active Regular Exercise Pattern\n(UK Biobank, Tsukita et al.)",
+        ],
+        "Ratio": [0.66, 0.73, 0.78, 0.55, 0.62, 0.65, 0.58, 0.44],
+        "CI_Lower": [0.57, 0.64, 0.69, 0.44, 0.48, 0.51, 0.43, 0.34],
+        "CI_Upper": [0.78, 0.84, 0.87, 0.69, 0.81, 0.83, 0.78, 0.57],
+    })
+
+    col1, col2, col3 = st.columns(3)
+    for col, label, val, delta in [
+        (col1, "Strongest Protection", "0.44x risk", "Active regular exercise"),
+        (col2, "Combined Effect", "0.55x risk", "High activity + ideal sleep"),
+        (col3, "Studies Reviewed", "6 cohorts", "All show risk reduction"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value" style="font-size:24px;">{val}</div>
+                <div class="metric-delta">{delta}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">Hazard / Odds Ratios Across Studies (with 95% Confidence Intervals)</div>', unsafe_allow_html=True)
+
+    life_sorted = lifestyle_data.sort_values("Ratio", ascending=False)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=life_sorted["Ratio"], y=life_sorted["Study"],
+        error_x=dict(
+            type="data", symmetric=False,
+            array=life_sorted["CI_Upper"] - life_sorted["Ratio"],
+            arrayminus=life_sorted["Ratio"] - life_sorted["CI_Lower"]
+        ),
+        mode="markers", marker=dict(size=14, color=COLORS["secondary"]), name="Hazard/Odds Ratio"
+    ))
+    fig.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"], annotation_text="No effect (Ratio=1)")
+    fig.update_layout(
+        title="Physical Activity & Sleep — Effect on PD Risk (Ratio < 1 = Protective)",
+        xaxis_title="Hazard / Odds Ratio (<1 = reduced risk)",
+        height=480
+    )
+    fig = apply_theme(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown('<div class="section-header">Key Findings from Literature</div>', unsafe_allow_html=True)
+    st.markdown("""
+    - **Consistent protective effect**: Every study reviewed shows physical activity reduces PD risk, with ratios ranging from 0.44 to 0.78 — meaning 22-56% lower risk depending on activity level and study design.
+    - **Dose-response relationship**: Higher activity levels (180+ MET-hours/week) show stronger protection than moderate activity, particularly in midlife (ages 45-64).
+    - **Sleep matters too**: An "ideal" sleep pattern independently reduces PD risk by 22% (HR = 0.78), and combining high activity with good sleep produces the strongest effect — a 45% risk reduction (HR = 0.55).
+    - **Sedentary time is harmful**: High sedentary time combined with low activity shows dramatically increased PD risk (HR up to 5.59) in accelerometer-based studies.
+    - **Exercise pattern flexibility**: Both "weekend warrior" (concentrated activity) and regularly distributed exercise show comparable protective effects — consistency in some form matters more than a specific schedule.
+    """)
+
+    st.markdown("""
+    <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
+    📖 <b>Data Sources:</b> LaHue et al., systematic review meta-analysis (Frontiers in Aging Neuroscience, 2020); Chen et al., UK Biobank cohort study, 
+    409,923 participants (Neuroepidemiology, 2023/PMC10867998); NIH-AARP Diet and Health Study, 213,701 participants (PMC2918886); Tsukita et al., 
+    UK Biobank accelerometer study, 89,400 participants (npj Digital Medicine, 2024). All ratios are hazard or odds ratios from peer-reviewed cohort 
+    and case-control studies, adjusted for age, sex, smoking, and other confounders.
     </div>
     """, unsafe_allow_html=True)
