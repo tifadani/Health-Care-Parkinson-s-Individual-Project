@@ -287,60 +287,18 @@ if page == "Overview":
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="section-header">Top Risk Factors Snapshot</div>', unsafe_allow_html=True)
-    snapshot_factors = {
-        "FamilyHistoryParkinsons": "Family History",
-        "TraumaticBrainInjury": "Traumatic Brain Injury",
-        "Depression": "Depression",
-        "Diabetes": "Diabetes"
-    }
-    snap_data = []
-    for col, label in snapshot_factors.items():
-        rate_with = filtered_df[filtered_df[col] == 1]["Diagnosis"].mean() * 100
-        rate_without = filtered_df[filtered_df[col] == 0]["Diagnosis"].mean() * 100
-        snap_data.append({"Factor": label, "With Factor (%)": rate_with, "Without Factor (%)": rate_without})
-    snap_df = pd.DataFrame(snap_data)
-
-    fig = go.Figure()
-    fig.add_trace(go.Bar(y=snap_df["Factor"], x=snap_df["With Factor (%)"], name="With Risk Factor",
-                         orientation="h", marker_color=COLORS["primary"]))
-    fig.add_trace(go.Bar(y=snap_df["Factor"], x=snap_df["Without Factor (%)"], name="Without Risk Factor",
-                         orientation="h", marker_color=COLORS["secondary"]))
-    fig.update_layout(barmode="group", title="PD Diagnosis Rate — Key Risk Factors Preview (%)", height=320)
-    fig = apply_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>See the Risk Factors page for the full breakdown.</span>", unsafe_allow_html=True)
-
 # ─────────────────────────────────────────────
 # PAGE: DEMOGRAPHICS
 # ─────────────────────────────────────────────
 elif page == "Demographics":
     st.markdown("## Demographics Analysis")
-    st.markdown(f"<span style='color:{COLORS['muted']}'>Distribution of Parkinson's disease across patient groups</span>", unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        gender_diag = filtered_df.groupby(["Gender", filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"})]).size().reset_index(name="Count")
-        gender_diag.columns = ["Gender", "Diagnosis", "Count"]
-        fig = px.bar(gender_diag, x="Gender", y="Count", color="Diagnosis",
-                     color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                     barmode="group", title="Diagnosis by Gender (Our Dataset)")
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        eth_rate = filtered_df.groupby("Ethnicity")["Diagnosis"].mean().reset_index()
-        eth_rate["PD Rate (%)"] = eth_rate["Diagnosis"] * 100
-        fig = px.bar(eth_rate, x="Ethnicity", y="PD Rate (%)", title="PD Diagnosis Rate by Ethnicity (%)",
-                     color="PD Rate (%)", color_continuous_scale=["#5b21b6", "#6d28d9"])
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Real-world Parkinson's demographics, grounded in published research</span>", unsafe_allow_html=True)
 
     st.markdown("""
     <div style="margin:16px 0; padding:16px; background:#1a1d27; border-left:4px solid #d97706; border-radius:8px; color:#e8e8f0; font-size:14px;">
-    ⚠️ <b>Sample vs. Real-World Pattern.</b> Our dataset shows roughly equal PD diagnosis rates between males and females. 
-    However, global epidemiological research consistently shows <b>men are about 1.5 times more likely</b> to develop PD than women, 
-    with the gap widening further with age. This is a known limitation of working with a single sample dataset versus population-level data.
+    ⚠️ <b>Note on data source.</b> The Kaggle dataset used for this dashboard is synthetic (generated for educational purposes), so it does not 
+    reliably reflect real-world demographic patterns — for example, it shows roughly equal PD rates between males and females, while real 
+    epidemiological research shows men are about 1.5 times more likely to develop PD than women. The charts below use real published data instead.
     </div>
     """, unsafe_allow_html=True)
 
