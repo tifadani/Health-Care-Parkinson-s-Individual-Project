@@ -915,30 +915,19 @@ elif page == "Pesticide Exposure":
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="section-header">Risk by Exposure Type</div>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        fig2 = px.bar(pest_data, x="Odds_Ratio", y="Study", orientation="h",
-                      color="Type",
-                      color_discrete_map={"Case-Control": COLORS["primary"], "Mortality (HR)": COLORS["danger"]},
-                      title="Odds Ratio by Study")
-        fig2.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"])
-        fig2 = apply_theme(fig2)
-        fig2.update_layout(height=450)
-        st.plotly_chart(fig2, use_container_width=True)
-
-    with col2:
-        gender_pest = pd.DataFrame({
-            "Gender": ["Males", "Females", "Males", "Females"],
-            "Study": ["Payami", "Payami", "Moura", "Moura"],
-            "Odds_Ratio": [2.52, 2.85, 2.19, 2.43]
-        })
-        fig3 = px.bar(gender_pest, x="Study", y="Odds_Ratio", color="Gender",
-                      color_discrete_map={"Males": COLORS["primary"], "Females": COLORS["warning"]},
-                      barmode="group", title="Pesticide Risk by Gender")
-        fig3.add_hline(y=1, line_dash="dash", line_color=COLORS["muted"])
-        fig3 = apply_theme(fig3)
-        st.plotly_chart(fig3, use_container_width=True)
+    st.markdown('<div class="section-header">Pesticide Risk by Gender</div>', unsafe_allow_html=True)
+    gender_pest = pd.DataFrame({
+        "Gender": ["Males", "Females", "Males", "Females"],
+        "Study": ["Payami", "Payami", "Moura", "Moura"],
+        "Odds_Ratio": [2.52, 2.85, 2.19, 2.43]
+    })
+    fig3 = px.bar(gender_pest, x="Study", y="Odds_Ratio", color="Gender",
+                  color_discrete_map={"Males": COLORS["primary"], "Females": COLORS["warning"]},
+                  barmode="group", title="Pesticide Risk by Gender — Females Consistently Higher")
+    fig3.add_hline(y=1, line_dash="dash", line_color=COLORS["muted"])
+    fig3 = apply_theme(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>Note: This is the opposite pattern from smoking, where males showed a stronger (protective) effect — suggesting these risk factors interact differently with biological sex.</span>", unsafe_allow_html=True)
 
     st.markdown('<div class="section-header">Key Findings from Literature</div>', unsafe_allow_html=True)
     st.markdown("""
