@@ -176,13 +176,14 @@ with st.sidebar:
     st.markdown("---")
     
     page = st.radio("Navigate", [
-        "📊 Overview",
-        "👥 Demographics",
-        "🩺 Clinical Analysis",
-        "🗺️ Risk Factors",
-        "🌍 Global Map",
-        "🚬 Smoking & PD",
-        "🤖 ML Prediction"
+        "Overview",
+        "Demographics",
+        "Clinical Analysis",
+        "Risk Factors",
+        "Global Map",
+        "Smoking & PD",
+        "Pesticide Exposure",
+        "ML Prediction"
     ])
     
     st.markdown("---")
@@ -235,7 +236,7 @@ def apply_theme(fig):
 # ─────────────────────────────────────────────
 # PAGE: OVERVIEW
 # ─────────────────────────────────────────────
-if page == "📊 Overview":
+if page == "Overview":
     st.markdown("## Parkinson's Disease Analytics Dashboard")
     st.markdown(f"<span style='color:{COLORS['muted']}'>MSBA382 · Healthcare Analytics · {len(filtered_df):,} patients shown</span>", unsafe_allow_html=True)
     st.markdown("")
@@ -297,7 +298,7 @@ if page == "📊 Overview":
 # ─────────────────────────────────────────────
 # PAGE: DEMOGRAPHICS
 # ─────────────────────────────────────────────
-elif page == "👥 Demographics":
+elif page == "Demographics":
     st.markdown("## Demographics Analysis")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Distribution of Parkinson's disease across patient groups</span>", unsafe_allow_html=True)
 
@@ -348,7 +349,7 @@ elif page == "👥 Demographics":
 # ─────────────────────────────────────────────
 # PAGE: CLINICAL ANALYSIS
 # ─────────────────────────────────────────────
-elif page == "🩺 Clinical Analysis":
+elif page == "Clinical Analysis":
     st.markdown("## Clinical Analysis")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Symptoms, cognitive scores, and clinical measurements</span>", unsafe_allow_html=True)
 
@@ -411,7 +412,7 @@ elif page == "🩺 Clinical Analysis":
 # ─────────────────────────────────────────────
 # PAGE: RISK FACTORS
 # ─────────────────────────────────────────────
-elif page == "🗺️ Risk Factors":
+elif page == "Risk Factors":
     st.markdown("## Risk Factor Analysis")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Identifying key contributors to Parkinson's disease</span>", unsafe_allow_html=True)
 
@@ -479,7 +480,7 @@ elif page == "🗺️ Risk Factors":
 # ─────────────────────────────────────────────
 # PAGE: ML PREDICTION
 # ─────────────────────────────────────────────
-elif page == "🤖 ML Prediction":
+elif page == "ML Prediction":
     st.markdown("## ML-Powered Diagnosis Prediction")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Random Forest classifier trained on clinical features</span>", unsafe_allow_html=True)
 
@@ -609,7 +610,7 @@ elif page == "🤖 ML Prediction":
 # ─────────────────────────────────────────────
 # PAGE: GLOBAL MAP
 # ─────────────────────────────────────────────
-elif page == "🌍 Global Map":
+elif page == "Global Map":
     st.markdown("## Global Parkinson's Disease Burden")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Source: Global Burden of Disease Study 2021 (IHME)</span>", unsafe_allow_html=True)
 
@@ -710,7 +711,7 @@ elif page == "🌍 Global Map":
 # ─────────────────────────────────────────────
 # PAGE: SMOKING & PD
 # ─────────────────────────────────────────────
-elif page == "🚬 Smoking & PD":
+elif page == "Smoking & PD":
     st.markdown("## Smoking & Parkinson's Disease")
     st.markdown(f"<span style='color:{COLORS['muted']}'>DALYs attributed to smoking · GBD Compare 2023 · Age-standardized</span>", unsafe_allow_html=True)
 
@@ -850,5 +851,119 @@ elif page == "🚬 Smoking & PD":
     📖 <b>Data Sources:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized DALYs attributed to smoking for Parkinson's disease.
     Patient-level data from Kaggle Parkinson's Disease Dataset (2,105 patients). 
     Note: The protective association of smoking with PD does not imply smoking is beneficial — its harms far outweigh any neuroprotective effect.
+    </div>
+    """, unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# PAGE: PESTICIDE EXPOSURE
+# ─────────────────────────────────────────────
+elif page == "Pesticide Exposure":
+    st.markdown("## Pesticide Exposure & Parkinson's Disease")
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Odds ratios from peer-reviewed epidemiological studies</span>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="margin:16px 0; padding:16px; background:#1a1d27; border-left:4px solid #dc2626; border-radius:8px; color:#e8e8f0; font-size:14px;">
+    ⚠️ <b>Pesticide exposure is the strongest documented environmental risk factor for Parkinson's disease.</b>
+    Unlike smoking, which shows a protective association, every major study below confirms pesticides significantly 
+    <i>increase</i> PD risk — with effects compounding by exposure duration, frequency, and proximity (occupational vs household).
+    </div>
+    """, unsafe_allow_html=True)
+
+    pest_data = pd.DataFrame({
+        "Study": [
+            "Direct Pesticide Application\n(Family-based, Tanner Lab)",
+            "Household Pesticides – Males\n(Payami et al.)",
+            "Household Pesticides – Females\n(Payami et al.)",
+            "Household Pesticides – All\n(Moura et al.)",
+            "Household Pesticides – Males\n(Moura et al.)",
+            "Household Pesticides – Females\n(Moura et al.)",
+            "Frequent Household Use\n(California study, Narayan et al.)",
+            "Occupational Exposure – Mortality Risk\n(Brazil cohort, HR)"
+        ],
+        "Odds_Ratio": [1.61, 2.52, 2.85, 2.27, 2.19, 2.43, 1.37, 2.32],
+        "CI_Lower": [1.13, 1.37, 1.87, 1.46, 1.18, 1.28, 1.13, 1.15],
+        "CI_Upper": [2.29, 4.0, 4.0, 3.52, 4.04, 4.6, 1.92, 4.66],
+        "Type": ["Case-Control", "Case-Control", "Case-Control", "Case-Control",
+                 "Case-Control", "Case-Control", "Case-Control", "Mortality (HR)"]
+    })
+
+    col1, col2, col3 = st.columns(3)
+    for col, label, val, delta in [
+        (col1, "Highest Risk Increase", "2.85x", "Females, household exposure"),
+        (col2, "Mortality Risk (PD+)", "2.32x", "Occupational exposure"),
+        (col3, "Population Impact", "10-20%", "Of new PD cases potentially preventable"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value" style="font-size:26px;">{val}</div>
+                <div class="metric-delta">{delta}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">Odds Ratios Across Studies (with 95% Confidence Intervals)</div>', unsafe_allow_html=True)
+
+    pest_sorted = pest_data.sort_values("Odds_Ratio")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=pest_sorted["Odds_Ratio"], y=pest_sorted["Study"],
+        error_x=dict(
+            type="data",
+            symmetric=False,
+            array=pest_sorted["CI_Upper"] - pest_sorted["Odds_Ratio"],
+            arrayminus=pest_sorted["Odds_Ratio"] - pest_sorted["CI_Lower"]
+        ),
+        mode="markers",
+        marker=dict(size=14, color=COLORS["danger"]),
+        name="Odds Ratio"
+    ))
+    fig.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"], annotation_text="No effect (OR=1)")
+    fig.update_layout(
+        title="Pesticide Exposure & PD Risk — Odds Ratios by Study",
+        xaxis_title="Odds Ratio (>1 = increased risk)",
+        height=450
+    )
+    fig = apply_theme(fig)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown('<div class="section-header">Risk by Exposure Type</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        fig2 = px.bar(pest_data, x="Odds_Ratio", y="Study", orientation="h",
+                      color="Type",
+                      color_discrete_map={"Case-Control": COLORS["primary"], "Mortality (HR)": COLORS["danger"]},
+                      title="Odds Ratio by Study")
+        fig2.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"])
+        fig2 = apply_theme(fig2)
+        fig2.update_layout(height=450)
+        st.plotly_chart(fig2, use_container_width=True)
+
+    with col2:
+        gender_pest = pd.DataFrame({
+            "Gender": ["Males", "Females", "Males", "Females"],
+            "Study": ["Payami", "Payami", "Moura", "Moura"],
+            "Odds_Ratio": [2.52, 2.85, 2.19, 2.43]
+        })
+        fig3 = px.bar(gender_pest, x="Study", y="Odds_Ratio", color="Gender",
+                      color_discrete_map={"Males": COLORS["primary"], "Females": COLORS["warning"]},
+                      barmode="group", title="Pesticide Risk by Gender")
+        fig3.add_hline(y=1, line_dash="dash", line_color=COLORS["muted"])
+        fig3 = apply_theme(fig3)
+        st.plotly_chart(fig3, use_container_width=True)
+
+    st.markdown('<div class="section-header">Key Findings from Literature</div>', unsafe_allow_html=True)
+    st.markdown("""
+    - **Dose-response relationship**: Frequency, duration, and cumulative pesticide exposure are all significantly associated with PD risk in a dose-response pattern.
+    - **Chemical classes implicated**: Organochlorines and organophosphorus insecticides showed the strongest associations; herbicides also significantly increase risk.
+    - **Family history interaction**: Pesticide-PD associations were strongest in individuals with *no* family history, suggesting pesticides may act as an independent trigger for sporadic PD.
+    - **Mortality**: PD patients with occupational pesticide exposure are more than twice as likely to die compared to unexposed PD patients (HR = 2.32).
+    - **Prevention potential**: Reducing excessive household pesticide use could prevent an estimated 10–20% of new PD cases.
+    """)
+
+    st.markdown("""
+    <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
+    📖 <b>Data Sources:</b> Tanner et al., family-based case-control study (PMC2323015); Payami et al. and Moura et al., household pesticide studies 
+    (PMC11024193); Brazilian occupational cohort study (PMC7298782). Odds ratios and hazard ratios extracted directly from published, peer-reviewed findings.
     </div>
     """, unsafe_allow_html=True)
