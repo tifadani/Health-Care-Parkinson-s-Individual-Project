@@ -835,33 +835,9 @@ elif page == "Smoking & PD":
         fig3 = apply_theme(fig3)
         st.plotly_chart(fig3, use_container_width=True)
 
-    # Patient-level smoking analysis from Kaggle dataset
-    st.markdown('<div class="section-header">Patient-Level: Smoking vs PD Diagnosis (Kaggle Dataset)</div>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        smoke_diag = filtered_df.groupby(["Smoking", filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"})]).size().reset_index(name="Count")
-        smoke_diag.columns = ["Smoking", "Diagnosis", "Count"]
-        smoke_diag["Smoking"] = smoke_diag["Smoking"].map({0: "Non-Smoker", 1: "Smoker"})
-        fig4 = px.bar(smoke_diag, x="Smoking", y="Count", color="Diagnosis",
-                      color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                      barmode="group", title="PD Diagnosis by Smoking Status")
-        fig4 = apply_theme(fig4)
-        st.plotly_chart(fig4, use_container_width=True)
-    with col2:
-        smoke_rate = filtered_df.groupby("Smoking")["Diagnosis"].mean().reset_index()
-        smoke_rate["Smoking"] = smoke_rate["Smoking"].map({0: "Non-Smoker", 1: "Smoker"})
-        smoke_rate["PD Rate (%)"] = smoke_rate["Diagnosis"] * 100
-        fig5 = px.bar(smoke_rate, x="Smoking", y="PD Rate (%)",
-                      color="Smoking",
-                      color_discrete_map={"Non-Smoker": COLORS["secondary"], "Smoker": COLORS["primary"]},
-                      title="PD Diagnosis Rate by Smoking Status (%)")
-        fig5 = apply_theme(fig5)
-        st.plotly_chart(fig5, use_container_width=True)
-
     st.markdown("""
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
-    📖 <b>Data Sources:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized DALYs attributed to smoking for Parkinson's disease.
-    Patient-level data from Kaggle Parkinson's Disease Dataset (2,105 patients). 
+    📖 <b>Data Source:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized DALYs attributed to smoking for Parkinson's disease.
     Note: The protective association of smoking with PD does not imply smoking is beneficial — its harms far outweigh any neuroprotective effect.
     </div>
     """, unsafe_allow_html=True)
