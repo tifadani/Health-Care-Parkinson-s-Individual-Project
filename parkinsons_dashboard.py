@@ -590,41 +590,49 @@ elif page == "ML Prediction":
 # ─────────────────────────────────────────────
 elif page == "Global Map":
     st.markdown("## Global Parkinson's Disease Burden")
-    st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Source: Global Burden of Disease Study 2023 (IHME GBD Compare)</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Both sexes, Age-standardized, 2023 · Source: GBD Compare (IHME)</span>", unsafe_allow_html=True)
 
-    # GBD 2023 data — age-standardised prevalence per 100,000 population
-    # Combined (Male + Female average) extracted from GBD Compare tool screenshots
+    # GBD 2023 data — Both sexes, Age-standardized, prevalent cases per 100,000
+    # Extracted directly from GBD Compare tool screenshots
     global_data = {
         "Country": [
-            "United States", "Canada", "Paraguay", "Brazil", "Argentina", "Uruguay", "Cuba", "Chile",
-            "United Kingdom", "France", "Germany", "Italy", "Spain", "Turkey", "Greece", "Albania",
-            "Israel", "Russia", "Ukraine", "Poland", "Romania", "Portugal", "Hungary", "Croatia",
-            "China", "Japan", "South Korea", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines",
-            "Vietnam", "Thailand", "Malaysia", "Singapore", "Australia", "New Zealand", "Nepal", "Maldives",
-            "Egypt", "South Africa", "Kenya", "Rwanda", "Seychelles", "Botswana", "Mauritius",
-            "Saudi Arabia", "Iran", "Iraq", "Palestine", "Lebanon", "Jordan", "UAE",
-            "Somalia", "Pakistan", "Afghanistan",
+            # MENA
+            "Algeria", "Bahrain", "Comoros", "Djibouti", "Egypt", "Iraq", "Jordan", "Kuwait",
+            "Lebanon", "Libya", "Mauritania", "Morocco", "Oman", "Palestine", "Qatar",
+            "Saudi Arabia", "Somalia", "Sudan", "Syria", "Tunisia", "UAE", "Yemen",
+            "Afghanistan", "Iran", "Pakistan",
+            # Sub-Saharan Africa
+            "Botswana", "Mauritius", "Seychelles", "South Africa", "Nigeria", "Kenya",
+            "Ethiopia", "Rwanda",
+            # Europe
+            "Italy", "Israel", "Spain", "Turkey", "Greece", "Germany", "France",
+            "United Kingdom", "Sweden", "Switzerland", "Hungary", "Kazakhstan",
+            # Americas
+            "Brazil", "Paraguay", "United States", "Canada", "Argentina", "Mexico",
+            "Bolivia", "Panama",
+            # South Asia
+            "India", "Nepal", "Bangladesh", "Sri Lanka", "Maldives", "Bhutan", "N Korea",
+            # East Asia & Pacific
+            "Japan", "South Korea", "China", "Australia", "New Zealand", "Indonesia",
+            "Malaysia", "Philippines", "Vietnam", "Singapore",
         ],
         "Prevalence_per_100k": [
-            240, 250, 290, 250, 245, 270, 230, 235,
-            290, 300, 320, 330, 305, 220, 295, 270,
-            260, 215, 200, 235, 220, 280, 230, 250,
-            190, 365, 350, 105, 75, 70, 140, 110,
-            150, 175, 165, 230, 280, 260, 65, 240,
-            145, 80, 60, 95, 175, 90, 130,
-            200, 190, 200, 175, 175, 165, 195,
-            45, 75, 50,
+            158, 180, 65, 55, 183, 197, 125, 181,
+            148, 162, 53, 150, 215, 154, 177,
+            255, 41, 142, 168, 148, 130, 115,
+            139, 162, 86,
+            55, 119, 138, 54, 52, 54,
+            55, 41,
+            198, 217, 162, 310, 198, 113, 113,
+            113, 120, 165, 113, 118,
+            282, 290, 156, 119, 144, 167,
+            173, 162,
+            67, 75, 83, 113, 111, 83, 132,
+            89, 121, 148, 156, 109, 88,
+            101, 109, 102, 158,
         ],
         "Region": [
-            "Americas", "Americas", "Americas", "Americas", "Americas", "Americas", "Americas", "Americas",
-            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
-            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
-            "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "South Asia", "South Asia", "South Asia", "East Asia & Pacific", "East Asia & Pacific",
-            "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "South Asia", "South Asia",
-            "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa",
-            "MENA", "MENA", "MENA", "MENA", "MENA", "MENA", "MENA",
-            "Sub-Saharan Africa", "South Asia", "South Asia",
-        ]
+            "MENA"]*25 + ["Sub-Saharan Africa"]*8 + ["Europe"]*12 + ["Americas"]*8 + ["South Asia"]*7 + ["East Asia & Pacific"]*10
     }
 
     gdf = pd.DataFrame(global_data)
@@ -680,9 +688,9 @@ elif page == "Global Map":
 
     st.markdown("""
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
-    📖 <b>Data Source:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardised prevalent cases per 100,000 population, 
-    averaged across male and female age-standardized estimates. Higher prevalence in high-income countries partly reflects aging populations 
-    and better diagnostic access rather than PD being inherently rarer elsewhere.
+    📖 <b>Data Source:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized prevalent cases per 100,000 population (both sexes). 
+    Since these figures are age-standardized, differences between countries are not simply explained by older populations — they more likely reflect 
+    diagnostic access, healthcare infrastructure, and reporting differences, alongside any genuine regional variation.
     </div>
     """, unsafe_allow_html=True)
 
