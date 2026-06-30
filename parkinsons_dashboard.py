@@ -279,21 +279,37 @@ if page == "Overview":
     with col2:
         age_diag = filtered_df.copy()
         age_diag["AgeGroup"] = pd.cut(age_diag["Age"], bins=[50,60,70,80,91], labels=["50-59","60-69","70-79","80+"])
-        age_diag["DiagnosisLabel"] = age_diag["Diagnosis"].map({1:"PD Positive", 0:"PD Negative"})
-        grouped = age_diag.groupby(["AgeGroup","DiagnosisLabel"]).size().reset_index(name="Count")
-        fig = px.bar(grouped, x="AgeGroup", y="Count", color="DiagnosisLabel",
-                     color_discrete_map={"PD Positive": COLORS["primary"], "PD Negative": COLORS["secondary"]},
-                     barmode="group", title="Diagnosis by Age Group")
+        age_rate = age_diag.groupby("AgeGroup")["Diagnosis"].mean().reset_index()
+        age_rate["PD Rate (%)"] = age_rate["Diagnosis"] * 100
+        fig = px.bar(age_rate, x="AgeGroup", y="PD Rate (%)",
+                     color="PD Rate (%)", color_continuous_scale=["#5b21b6", "#6d28d9"],
+                     title="PD Diagnosis Rate by Age Group (%)")
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('<div class="section-header">UPDRS Severity Distribution</div>', unsafe_allow_html=True)
-    fig = px.histogram(filtered_df, x="UPDRS", color=filtered_df["Diagnosis"].map({1:"PD Positive", 0:"PD Negative"}),
-                       nbins=40, opacity=0.75, barmode="overlay",
-                       color_discrete_map={"PD Positive": COLORS["primary"], "PD Negative": COLORS["secondary"]},
-                       title="UPDRS Score Distribution (Higher = More Severe)")
+    st.markdown('<div class="section-header">Top Risk Factors Snapshot</div>', unsafe_allow_html=True)
+    snapshot_factors = {
+        "FamilyHistoryParkinsons": "Family History",
+        "TraumaticBrainInjury": "Traumatic Brain Injury",
+        "Depression": "Depression",
+        "Diabetes": "Diabetes"
+    }
+    snap_data = []
+    for col, label in snapshot_factors.items():
+        rate_with = filtered_df[filtered_df[col] == 1]["Diagnosis"].mean() * 100
+        rate_without = filtered_df[filtered_df[col] == 0]["Diagnosis"].mean() * 100
+        snap_data.append({"Factor": label, "With Factor (%)": rate_with, "Without Factor (%)": rate_without})
+    snap_df = pd.DataFrame(snap_data)
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(y=snap_df["Factor"], x=snap_df["With Factor (%)"], name="With Risk Factor",
+                         orientation="h", marker_color=COLORS["primary"]))
+    fig.add_trace(go.Bar(y=snap_df["Factor"], x=snap_df["Without Factor (%)"], name="Without Risk Factor",
+                         orientation="h", marker_color=COLORS["secondary"]))
+    fig.update_layout(barmode="group", title="PD Diagnosis Rate — Key Risk Factors Preview (%)", height=320)
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>See the Risk Factors page for the full breakdown.</span>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # PAGE: DEMOGRAPHICS
@@ -308,54 +324,82 @@ elif page == "Demographics":
         gender_diag.columns = ["Gender", "Diagnosis", "Count"]
         fig = px.bar(gender_diag, x="Gender", y="Count", color="Diagnosis",
                      color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                     barmode="group", title="Diagnosis by Gender")
+                     barmode="group", title="Diagnosis by Gender (Our Dataset)")
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        eth_diag = filtered_df[filtered_df["Diagnosis"] == 1].groupby("Ethnicity").size().reset_index(name="Count")
-        fig = px.bar(eth_diag, x="Ethnicity", y="Count", title="PD Cases by Ethnicity",
-                     color="Count", color_continuous_scale=["#5b21b6", "#6d28d9"])
+        eth_rate = filtered_df.groupby("Ethnicity")["Diagnosis"].mean().reset_index()
+        eth_rate["PD Rate (%)"] = eth_rate["Diagnosis"] * 100
+        fig = px.bar(eth_rate, x="Ethnicity", y="PD Rate (%)", title="PD Diagnosis Rate by Ethnicity (%)",
+                     color="PD Rate (%)", color_continuous_scale=["#5b21b6", "#6d28d9"])
         fig = apply_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("""
+    <div style="margin:16px 0; padding:16px; background:#1a1d27; border-left:4px solid #d97706; border-radius:8px; color:#e8e8f0; font-size:14px;">
+    ⚠️ <b>Sample vs. Real-World Pattern.</b> Our dataset shows roughly equal PD diagnosis rates between males and females. 
+    However, global epidemiological research consistently shows <b>men are about 1.5 times more likely</b> to develop PD than women, 
+    with the gap widening further with age. This is a known limitation of working with a single sample dataset versus population-level data.
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header">Real-World Gender Gap (GBD 2023 — Prevalent Cases per 100,000)</div>', unsafe_allow_html=True)
+
+    gbd_gender_data = pd.DataFrame({
+        "Region": ["Sub-Saharan Africa", "MENA", "Europe", "Americas", "South Asia", "East Asia & Pacific"],
+        "Males": [62, 215, 290, 240, 95, 130],
+        "Females": [48, 165, 230, 195, 80, 115]
+    })
+    gbd_gender_data["Male_to_Female_Ratio"] = (gbd_gender_data["Males"] / gbd_gender_data["Females"]).round(2)
 
     col1, col2 = st.columns(2)
     with col1:
-        fig = px.box(filtered_df, x=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}), y="Age",
-                     color=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}),
-                     color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                     title="Age Distribution by Diagnosis")
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        edu_diag = filtered_df.groupby(["EducationLevel", filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"})]).size().reset_index(name="Count")
-        edu_diag.columns = ["Education", "Diagnosis", "Count"]
-        fig = px.bar(edu_diag, x="Education", y="Count", color="Diagnosis",
-                     color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                     barmode="stack", title="Diagnosis by Education Level")
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
+        fig_gbd = go.Figure()
+        fig_gbd.add_trace(go.Bar(x=gbd_gender_data["Region"], y=gbd_gender_data["Males"],
+                                  name="Males", marker_color=COLORS["primary"]))
+        fig_gbd.add_trace(go.Bar(x=gbd_gender_data["Region"], y=gbd_gender_data["Females"],
+                                  name="Females", marker_color=COLORS["warning"]))
+        fig_gbd.update_layout(barmode="group", title="PD Prevalence by Sex & Region (GBD 2023)",
+                               yaxis_title="Cases per 100,000")
+        fig_gbd = apply_theme(fig_gbd)
+        st.plotly_chart(fig_gbd, use_container_width=True)
 
-    st.markdown('<div class="section-header">BMI vs Age (PD Patients)</div>', unsafe_allow_html=True)
-    pd_only = filtered_df[filtered_df["Diagnosis"] == 1]
-    fig = px.scatter(pd_only, x="Age", y="BMI", color="Gender",
-                     color_discrete_map={"Male": COLORS["primary"], "Female": COLORS["warning"]},
-                     opacity=0.6, title="BMI vs Age in PD-Positive Patients",
-                     trendline="lowess")
+    with col2:
+        fig_ratio = px.bar(gbd_gender_data.sort_values("Male_to_Female_Ratio"),
+                            x="Male_to_Female_Ratio", y="Region", orientation="h",
+                            title="Male-to-Female Prevalence Ratio by Region",
+                            color="Male_to_Female_Ratio",
+                            color_continuous_scale=["#fbbf24", "#dc2626"],
+                            labels={"Male_to_Female_Ratio": "Ratio (Male:Female)"})
+        fig_ratio.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"], annotation_text="Equal (1.0)")
+        fig_ratio = apply_theme(fig_ratio)
+        st.plotly_chart(fig_ratio, use_container_width=True)
+
+    st.markdown('<div class="section-header">Age Distribution</div>', unsafe_allow_html=True)
+    fig = px.box(filtered_df, x=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}), y="Age",
+                 color=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}),
+                 color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
+                 title="Age Distribution by Diagnosis")
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("""
+    <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
+    📖 <b>Data Source:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardized prevalent cases per 100,000 by sex and region.
+    </div>
+    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # PAGE: CLINICAL ANALYSIS
 # ─────────────────────────────────────────────
 elif page == "Clinical Analysis":
-    st.markdown("## Clinical Analysis")
-    st.markdown(f"<span style='color:{COLORS['muted']}'>Symptoms, cognitive scores, and clinical measurements</span>", unsafe_allow_html=True)
+    st.markdown("## Clinical Analysis — Early Symptom Detection")
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Symptoms and cognitive scores that can help flag PD before formal diagnosis</span>", unsafe_allow_html=True)
 
     st.markdown('<div class="section-header">Motor Symptoms Prevalence</div>', unsafe_allow_html=True)
-    symptoms = ["Tremor", "Rigidity", "Bradykinesia", "PosturalInstability", "SpeechProblems"]
-    symptom_labels = ["Tremor", "Rigidity", "Bradykinesia", "Postural Instability", "Speech Problems"]
+    symptoms = ["Tremor", "Rigidity", "Bradykinesia", "PosturalInstability"]
+    symptom_labels = ["Tremor", "Rigidity", "Bradykinesia", "Postural Instability"]
     
     pd_pos = filtered_df[filtered_df["Diagnosis"] == 1]
     pd_neg = filtered_df[filtered_df["Diagnosis"] == 0]
@@ -374,40 +418,17 @@ elif page == "Clinical Analysis":
     fig.update_layout(barmode="group", title="Motor Symptom Prevalence (%)")
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>Note: Speech Problems was excluded — it showed no meaningful difference between PD+ and PD- patients (~29-30% both groups).</span>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        fig = px.box(filtered_df, x=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}), y="MoCA",
-                     color=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}),
-                     color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                     title="MoCA Cognitive Score by Diagnosis")
-        fig.add_hline(y=26, line_dash="dash", line_color=COLORS["warning"],
-                      annotation_text="Normal cutoff (26)", annotation_position="top right")
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        fig = px.scatter(filtered_df[filtered_df["Diagnosis"]==1], x="UPDRS", y="MoCA",
-                         color="Age", color_continuous_scale=["#5b21b6", "#6d28d9", "#dc2626"],
-                         title="UPDRS vs MoCA (PD Patients)", opacity=0.6)
-        fig.update_layout(coloraxis_colorbar=dict(title="Age"))
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown('<div class="section-header">Sleep & Lifestyle Factors</div>', unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    for col, metric, label in [
-        (col1, "SleepQuality", "Sleep Quality"),
-        (col2, "PhysicalActivity", "Physical Activity"),
-        (col3, "DietQuality", "Diet Quality"),
-    ]:
-        with col:
-            fig = px.violin(filtered_df, x=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}), y=metric,
-                            color=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}),
-                            color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
-                            box=True, title=f"{label} by Diagnosis")
-            fig = apply_theme(fig)
-            st.plotly_chart(fig, use_container_width=True)
+    st.markdown('<div class="section-header">Cognitive Score (MoCA)</div>', unsafe_allow_html=True)
+    fig = px.box(filtered_df, x=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}), y="MoCA",
+                 color=filtered_df["Diagnosis"].map({1:"PD+", 0:"PD-"}),
+                 color_discrete_map={"PD+": COLORS["primary"], "PD-": COLORS["secondary"]},
+                 title="MoCA Cognitive Score by Diagnosis")
+    fig.add_hline(y=26, line_dash="dash", line_color=COLORS["warning"],
+                  annotation_text="Normal cutoff (26)", annotation_position="top right")
+    fig = apply_theme(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
 # ─────────────────────────────────────────────
 # PAGE: RISK FACTORS
@@ -424,7 +445,6 @@ elif page == "Risk Factors":
         "Diabetes": "Diabetes",
         "Smoking": "Smoking",
         "Stroke": "Stroke",
-        "AlcoholConsumption": "Alcohol Consumption"
     }
     
     risk_data = []
@@ -435,6 +455,15 @@ elif page == "Risk Factors":
         rate_without = total_without["Diagnosis"].mean() * 100 if len(total_without) > 0 else 0
         risk_data.append({"Factor": label, "With Factor (%)": rate_with, "Without Factor (%)": rate_without,
                            "Difference": rate_with - rate_without})
+
+    # AlcoholConsumption is a continuous 0-10 scale in this dataset, not binary — split by median instead
+    alcohol_median = filtered_df["AlcoholConsumption"].median()
+    high_alcohol = filtered_df[filtered_df["AlcoholConsumption"] >= alcohol_median]
+    low_alcohol = filtered_df[filtered_df["AlcoholConsumption"] < alcohol_median]
+    rate_high = high_alcohol["Diagnosis"].mean() * 100 if len(high_alcohol) > 0 else 0
+    rate_low = low_alcohol["Diagnosis"].mean() * 100 if len(low_alcohol) > 0 else 0
+    risk_data.append({"Factor": "Alcohol Consumption (Above Median)", "With Factor (%)": rate_high,
+                       "Without Factor (%)": rate_low, "Difference": rate_high - rate_low})
     
     risk_df = pd.DataFrame(risk_data).sort_values("Difference", ascending=True)
     
@@ -446,36 +475,27 @@ elif page == "Risk Factors":
     fig.update_layout(barmode="group", title="PD Diagnosis Rate With vs Without Risk Factor (%)", height=450)
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"""
+    <span style='color:{COLORS['muted']}; font-size:13px;'>
+    ⚠️ Note: Several results here (Traumatic Brain Injury, Family History, Smoking, Hypertension) don't show the strong associations 
+    seen in established research — likely a limitation of this sample dataset rather than a contradiction of the literature. 
+    See the Smoking & PD and Pesticide Exposure pages for findings grounded in published, peer-reviewed research.
+    </span>
+    """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-header">Comorbidity Impact on UPDRS Severity</div>', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        pd_data = filtered_df[filtered_df["Diagnosis"] == 1]
-        comorbidity_score = pd_data[["Hypertension","Diabetes","Depression","Stroke"]].sum(axis=1)
-        pd_data = pd_data.copy()
-        pd_data["ComorbidityCount"] = comorbidity_score
-        fig = px.box(pd_data, x="ComorbidityCount", y="UPDRS",
-                     title="UPDRS by Number of Comorbidities (PD+)",
-                     color="ComorbidityCount",
-                     color_discrete_sequence=[COLORS["primary"], COLORS["warning"], COLORS["danger"], "#60a5fa", "#f472b6"])
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        corr_cols = ["Age", "BMI", "UPDRS", "MoCA", "FunctionalAssessment", "SleepQuality", "PhysicalActivity", "DietQuality"]
-        corr_matrix = filtered_df[corr_cols + ["Diagnosis"]].corr()
-        fig = px.imshow(corr_matrix, color_continuous_scale=["#059669", "#f5f7ff", "#6d28d9"],
-                        title="Correlation Matrix: Clinical Variables", text_auto=".2f", aspect="auto")
-        fig = apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown('<div class="section-header">Cholesterol Profile in PD Patients</div>', unsafe_allow_html=True)
-    chol_data = filtered_df[filtered_df["Diagnosis"] == 1][["CholesterolTotal", "CholesterolLDL", "CholesterolHDL", "Gender"]]
-    fig = px.scatter(chol_data, x="CholesterolLDL", y="CholesterolHDL",
-                     color="Gender", color_discrete_map={"Male": COLORS["primary"], "Female": COLORS["warning"]},
-                     opacity=0.5, title="LDL vs HDL Cholesterol in PD Patients", trendline="ols")
+    st.markdown('<div class="section-header">Correlation Matrix: Clinical Variables</div>', unsafe_allow_html=True)
+    corr_cols = ["Age", "BMI", "UPDRS", "MoCA", "FunctionalAssessment", "SleepQuality", "PhysicalActivity", "DietQuality"]
+    corr_matrix = filtered_df[corr_cols + ["Diagnosis"]].corr()
+    fig = px.imshow(corr_matrix, color_continuous_scale=["#059669", "#f5f7ff", "#6d28d9"],
+                    title="Correlation Matrix: Clinical Variables", text_auto=".2f", aspect="auto")
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"""
+    <span style='color:{COLORS['muted']}; font-size:13px;'>
+    This is the most reliable chart on this page — UPDRS (0.40), Functional Assessment (-0.23), and MoCA (-0.17) show the strongest 
+    correlation with diagnosis, while lifestyle factors (Age, BMI, Sleep, Activity, Diet) show near-zero correlation in this dataset.
+    </span>
+    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # PAGE: ML PREDICTION
@@ -612,52 +632,52 @@ elif page == "ML Prediction":
 # ─────────────────────────────────────────────
 elif page == "Global Map":
     st.markdown("## Global Parkinson's Disease Burden")
-    st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Source: Global Burden of Disease Study 2021 (IHME)</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}'>Prevalence per 100,000 people · Source: Global Burden of Disease Study 2023 (IHME GBD Compare)</span>", unsafe_allow_html=True)
 
-    # GBD 2021 data — age-standardised prevalence per 100,000 population
+    # GBD 2023 data — age-standardised prevalence per 100,000 population
+    # Combined (Male + Female average) extracted from GBD Compare tool screenshots
     global_data = {
         "Country": [
-            "United States", "Canada", "Mexico", "Brazil", "Argentina", "Colombia", "Peru", "Chile",
-            "United Kingdom", "France", "Germany", "Italy", "Spain", "Netherlands", "Sweden", "Norway",
-            "Finland", "Denmark", "Switzerland", "Austria", "Belgium", "Portugal", "Greece", "Poland",
-            "Czech Republic", "Hungary", "Romania", "Ukraine", "Russia", "Turkey",
+            "United States", "Canada", "Paraguay", "Brazil", "Argentina", "Uruguay", "Cuba", "Chile",
+            "United Kingdom", "France", "Germany", "Italy", "Spain", "Turkey", "Greece", "Albania",
+            "Israel", "Russia", "Ukraine", "Poland", "Romania", "Portugal", "Hungary", "Croatia",
             "China", "Japan", "South Korea", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines",
-            "Vietnam", "Thailand", "Malaysia", "Singapore", "Australia", "New Zealand",
-            "Egypt", "South Africa", "Nigeria", "Kenya", "Ethiopia", "Morocco", "Algeria", "Tunisia",
+            "Vietnam", "Thailand", "Malaysia", "Singapore", "Australia", "New Zealand", "Nepal", "Maldives",
+            "Egypt", "South Africa", "Kenya", "Rwanda", "Seychelles", "Botswana", "Mauritius",
             "Saudi Arabia", "Iran", "Iraq", "Palestine", "Lebanon", "Jordan", "UAE",
-            "Kazakhstan", "Uzbekistan", "Azerbaijan"
+            "Somalia", "Pakistan", "Afghanistan",
         ],
         "Prevalence_per_100k": [
-            329, 310, 195, 180, 210, 160, 145, 220,
-            305, 315, 340, 350, 320, 295, 280, 270,
-            265, 285, 330, 325, 300, 290, 310, 220,
-            230, 215, 200, 185, 210, 195,
-            175, 370, 345, 120, 105, 100, 110, 115,
-            130, 150, 165, 280, 315, 300,
-            140, 125, 80, 75, 70, 130, 135, 128,
-            155, 145, 130, 295, 160, 148, 170,
-            165, 150, 155
+            240, 250, 290, 250, 245, 270, 230, 235,
+            290, 300, 320, 330, 305, 220, 295, 270,
+            260, 215, 200, 235, 220, 280, 230, 250,
+            190, 365, 350, 105, 75, 70, 140, 110,
+            150, 175, 165, 230, 280, 260, 65, 240,
+            145, 80, 60, 95, 175, 90, 130,
+            200, 190, 200, 175, 175, 165, 195,
+            45, 75, 50,
         ],
         "Region": [
-            "North America", "North America", "Latin America", "Latin America", "Latin America", "Latin America", "Latin America", "Latin America",
+            "Americas", "Americas", "Americas", "Americas", "Americas", "Americas", "Americas", "Americas",
             "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
             "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
-            "Europe", "Europe", "Europe", "Europe", "Europe", "Europe",
-            "Asia", "Asia", "Asia", "Asia", "Asia", "Asia", "Asia", "Asia",
-            "Asia", "Asia", "Asia", "Asia", "Oceania", "Oceania",
-            "Africa", "Africa", "Africa", "Africa", "Africa", "Africa", "Africa", "Africa",
-            "Middle East", "Middle East", "Middle East", "Middle East", "Middle East", "Middle East", "Middle East",
-            "Central Asia", "Central Asia", "Central Asia"
+            "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "South Asia", "South Asia", "South Asia", "East Asia & Pacific", "East Asia & Pacific",
+            "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "East Asia & Pacific", "South Asia", "South Asia",
+            "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa", "Sub-Saharan Africa",
+            "MENA", "MENA", "MENA", "MENA", "MENA", "MENA", "MENA",
+            "Sub-Saharan Africa", "South Asia", "South Asia",
         ]
     }
 
     gdf = pd.DataFrame(global_data)
 
     # KPI row
+    top_country = gdf.loc[gdf["Prevalence_per_100k"].idxmax()]
+    low_country = gdf.loc[gdf["Prevalence_per_100k"].idxmin()]
     col1, col2, col3, col4 = st.columns(4)
     for col, label, val in [
-        (col1, "Highest Prevalence", "Japan · 370/100k"),
-        (col2, "Lowest Prevalence", "Ethiopia · 70/100k"),
+        (col1, "Highest Prevalence", f"{top_country['Country']} · {top_country['Prevalence_per_100k']}/100k"),
+        (col2, "Lowest Prevalence", f"{low_country['Country']} · {low_country['Prevalence_per_100k']}/100k"),
         (col3, "Global Average", f"{int(gdf['Prevalence_per_100k'].mean())}/100k"),
         (col4, "Countries Tracked", f"{len(gdf)}"),
     ]:
@@ -669,15 +689,14 @@ elif page == "Global Map":
             </div>
             """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-header">World Map — PD Prevalence per 100,000</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Top 20 Countries by PD Prevalence per 100,000</div>', unsafe_allow_html=True)
 
-    # Top 20 countries bar chart instead of choropleth
     top20 = gdf.nlargest(20, "Prevalence_per_100k").sort_values("Prevalence_per_100k", ascending=True)
     fig = px.bar(top20, x="Prevalence_per_100k", y="Country", orientation="h",
                  color="Prevalence_per_100k",
                  color_continuous_scale=["#5b21b6", "#7c3aed", "#6d28d9"],
                  labels={"Prevalence_per_100k": "Prevalence per 100,000"},
-                 title="Top 20 Countries by PD Prevalence per 100,000 (GBD 2021)")
+                 title="Top 20 Countries by PD Prevalence per 100,000 (GBD 2023)")
     fig = apply_theme(fig)
     fig.update_layout(height=550, showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
@@ -703,8 +722,9 @@ elif page == "Global Map":
 
     st.markdown("""
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
-    📖 <b>Data Source:</b> Global Burden of Disease Study 2021 (IHME). Age-standardised prevalence rates per 100,000 population. 
-    Higher prevalence in high-income countries partly reflects better diagnosis and longer life expectancy.
+    📖 <b>Data Source:</b> Global Burden of Disease Study 2023 (IHME) — GBD Compare tool, age-standardised prevalent cases per 100,000 population, 
+    averaged across male and female age-standardized estimates. Higher prevalence in high-income countries partly reflects aging populations 
+    and better diagnostic access rather than PD being inherently rarer elsewhere.
     </div>
     """, unsafe_allow_html=True)
 
