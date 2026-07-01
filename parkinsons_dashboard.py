@@ -179,7 +179,6 @@ with st.sidebar:
         "Overview",
         "Demographics",
         "Clinical Analysis",
-        "Risk Factors",
         "Global Map",
         "Smoking & PD",
         "Pesticide Exposure",
@@ -389,76 +388,7 @@ elif page == "Clinical Analysis":
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
-# ─────────────────────────────────────────────
-# PAGE: RISK FACTORS
-# ─────────────────────────────────────────────
-elif page == "Risk Factors":
-    st.markdown("## Risk Factor Analysis")
-    st.markdown(f"<span style='color:{COLORS['muted']}'>Identifying key contributors to Parkinson's disease</span>", unsafe_allow_html=True)
 
-    risk_factors = {
-        "FamilyHistoryParkinsons": "Family History",
-        "TraumaticBrainInjury": "Traumatic Brain Injury",
-        "Depression": "Depression",
-        "Hypertension": "Hypertension",
-        "Diabetes": "Diabetes",
-        "Smoking": "Smoking",
-        "Stroke": "Stroke",
-    }
-    
-    risk_data = []
-    for col, label in risk_factors.items():
-        total_with = filtered_df[filtered_df[col] == 1]
-        total_without = filtered_df[filtered_df[col] == 0]
-        rate_with = total_with["Diagnosis"].mean() * 100 if len(total_with) > 0 else 0
-        rate_without = total_without["Diagnosis"].mean() * 100 if len(total_without) > 0 else 0
-        risk_data.append({"Factor": label, "With Factor (%)": rate_with, "Without Factor (%)": rate_without,
-                           "Difference": rate_with - rate_without})
-
-    # AlcoholConsumption is a continuous 0-10 scale in this dataset, not binary — split by median instead
-    alcohol_median = filtered_df["AlcoholConsumption"].median()
-    high_alcohol = filtered_df[filtered_df["AlcoholConsumption"] >= alcohol_median]
-    low_alcohol = filtered_df[filtered_df["AlcoholConsumption"] < alcohol_median]
-    rate_high = high_alcohol["Diagnosis"].mean() * 100 if len(high_alcohol) > 0 else 0
-    rate_low = low_alcohol["Diagnosis"].mean() * 100 if len(low_alcohol) > 0 else 0
-    risk_data.append({"Factor": "Alcohol Consumption (Above Median)", "With Factor (%)": rate_high,
-                       "Without Factor (%)": rate_low, "Difference": rate_high - rate_low})
-    
-    risk_df = pd.DataFrame(risk_data).sort_values("Difference", ascending=True)
-    
-    fig = go.Figure()
-    fig.add_trace(go.Bar(y=risk_df["Factor"], x=risk_df["With Factor (%)"], name="With Risk Factor",
-                         orientation="h", marker_color=COLORS["primary"]))
-    fig.add_trace(go.Bar(y=risk_df["Factor"], x=risk_df["Without Factor (%)"], name="Without Risk Factor",
-                         orientation="h", marker_color=COLORS["secondary"]))
-    fig.update_layout(barmode="group", title="PD Diagnosis Rate With vs Without Risk Factor (%)", height=450)
-    fig = apply_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"""
-    <span style='color:{COLORS['muted']}; font-size:13px;'>
-    ⚠️ Note: Several results here (Traumatic Brain Injury, Family History, Smoking, Hypertension) don't show the strong associations 
-    seen in established research — likely a limitation of this sample dataset rather than a contradiction of the literature. 
-    See the Smoking & PD and Pesticide Exposure pages for findings grounded in published, peer-reviewed research.
-    </span>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="section-header">Correlation Matrix: Clinical Variables</div>', unsafe_allow_html=True)
-    corr_cols = ["Age", "BMI", "UPDRS", "MoCA", "FunctionalAssessment", "SleepQuality", "PhysicalActivity", "DietQuality"]
-    corr_matrix = filtered_df[corr_cols + ["Diagnosis"]].corr()
-    fig = px.imshow(corr_matrix, color_continuous_scale=["#059669", "#f5f7ff", "#6d28d9"],
-                    title="Correlation Matrix: Clinical Variables", text_auto=".2f", aspect="auto")
-    fig = apply_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"""
-    <span style='color:{COLORS['muted']}; font-size:13px;'>
-    This is the most reliable chart on this page — UPDRS (0.40), Functional Assessment (-0.23), and MoCA (-0.17) show the strongest 
-    correlation with diagnosis, while lifestyle factors (Age, BMI, Sleep, Activity, Diet) show near-zero correlation in this dataset.
-    </span>
-    """, unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-# PAGE: ML PREDICTION
-# ─────────────────────────────────────────────
 elif page == "ML Prediction":
     st.markdown("## ML-Powered Diagnosis Prediction")
     st.markdown(f"<span style='color:{COLORS['muted']}'>Random Forest classifier trained on clinical features</span>", unsafe_allow_html=True)
@@ -764,6 +694,35 @@ elif page == "Smoking & PD":
             </div>
             """, unsafe_allow_html=True)
 
+    st.markdown('<div class="section-header">The Smoking Paradox — Effect Size in Context</div>', unsafe_allow_html=True)
+
+    paradox_data = pd.DataFrame({
+        "Factor": ["Pesticide Exposure (Avg.)", "Ideal Sleep Pattern", "Physical Activity (Pooled)", "Smoking (Ever vs. Never)"],
+        "Ratio": [2.20, 0.78, 0.66, 0.59],
+        "Direction": ["Harmful", "Protective", "Protective", "Protective"]
+    })
+    fig_paradox = go.Figure()
+    fig_paradox.add_trace(go.Bar(
+        x=paradox_data["Ratio"], y=paradox_data["Factor"], orientation="h",
+        marker_color=[COLORS["danger"] if d == "Harmful" else COLORS["secondary"] for d in paradox_data["Direction"]],
+        text=paradox_data["Ratio"], textposition="outside"
+    ))
+    fig_paradox.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"])
+    fig_paradox.update_layout(
+        title="Comparing Peer-Reviewed Effect Sizes (values below 1.0 are protective, above 1.0 are harmful)",
+        xaxis_title="Relative Risk / Hazard Ratio / Odds Ratio",
+        height=350, showlegend=False
+    )
+    fig_paradox = apply_theme(fig_paradox)
+    st.plotly_chart(fig_paradox, use_container_width=True)
+    st.markdown(f"""
+    <span style='color:{COLORS['muted']}; font-size:14px;'>
+    <b>Smoking looks protective — but it's nothing special.</b> At 0.59, it's about the same size effect as physical activity and good sleep 
+    (both covered on the Lifestyle Factors page). It's a real pattern, just not an outsized one. Pesticide exposure is the outlier here — 
+    the one factor that actually raises risk instead of lowering it.
+    </span>
+    """, unsafe_allow_html=True)
+
     st.markdown('<div class="section-header">Tobacco: The Only GBD-Tracked Risk Factor for PD</div>', unsafe_allow_html=True)
     st.markdown(f"""
     <span style='color:{COLORS['muted']}; font-size:14px;'>
@@ -858,27 +817,29 @@ elif page == "Pesticide Exposure":
     </div>
     """, unsafe_allow_html=True)
 
+    # Payami et al. and Moura et al. household-pesticide findings are merged into single
+    # Males / Females categories (average of the two studies' ORs) to match the pitch-deck chart.
     pest_data = pd.DataFrame({
         "Study": [
-            "Direct Pesticide Application\n(Family-based, Tanner Lab)",
-            "Household Pesticides – Males\n(Payami et al.)",
-            "Household Pesticides – Females\n(Payami et al.)",
-            "Household Pesticides – All\n(Moura et al.)",
-            "Household Pesticides – Males\n(Moura et al.)",
-            "Household Pesticides – Females\n(Moura et al.)",
-            "Frequent Household Use\n(California study, Narayan et al.)",
-            "Occupational Exposure – Mortality Risk\n(Brazil cohort, HR)"
+            "Direct Pesticide Application",
+            "Household – Males",
+            "Household – Females",
+            "Frequent Household Use",
+            "Occupational Mortality"
         ],
-        "Odds_Ratio": [1.61, 2.52, 2.85, 2.27, 2.19, 2.43, 1.37, 2.32],
-        "CI_Lower": [1.13, 1.37, 1.87, 1.46, 1.18, 1.28, 1.13, 1.15],
-        "CI_Upper": [2.29, 4.0, 4.0, 3.52, 4.04, 4.6, 1.92, 4.66],
-        "Type": ["Case-Control", "Case-Control", "Case-Control", "Case-Control",
-                 "Case-Control", "Case-Control", "Case-Control", "Mortality (HR)"]
+        "Odds_Ratio": [1.61, 2.36, 2.64, 1.37, 2.32],
+        "Source": [
+            "Family-based, Tanner Lab",
+            "Avg. of Payami et al. & Moura et al.",
+            "Avg. of Payami et al. & Moura et al.",
+            "California study, Narayan et al.",
+            "Brazil cohort, HR"
+        ]
     })
 
     col1, col2, col3 = st.columns(3)
     for col, label, val, delta in [
-        (col1, "Highest Risk Increase", "2.85x", "Females, household exposure"),
+        (col1, "Highest Risk Increase", "2.64x", "Females, household exposure"),
         (col2, "Mortality Risk (PD+)", "2.32x", "Occupational exposure"),
         (col3, "Population Impact", "10-20%", "Of new PD cases potentially preventable"),
     ]:
@@ -891,44 +852,24 @@ elif page == "Pesticide Exposure":
             </div>
             """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-header">Odds Ratios Across Studies (with 95% Confidence Intervals)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Odds Ratios Across Studies</div>', unsafe_allow_html=True)
 
     pest_sorted = pest_data.sort_values("Odds_Ratio")
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=pest_sorted["Odds_Ratio"], y=pest_sorted["Study"],
-        error_x=dict(
-            type="data",
-            symmetric=False,
-            array=pest_sorted["CI_Upper"] - pest_sorted["Odds_Ratio"],
-            arrayminus=pest_sorted["Odds_Ratio"] - pest_sorted["CI_Lower"]
-        ),
-        mode="markers",
-        marker=dict(size=14, color=COLORS["danger"]),
-        name="Odds Ratio"
+    fig.add_trace(go.Bar(
+        x=pest_sorted["Odds_Ratio"], y=pest_sorted["Study"], orientation="h",
+        marker_color=COLORS["danger"],
+        text=pest_sorted["Odds_Ratio"], textposition="outside"
     ))
     fig.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"], annotation_text="No effect (OR=1)")
     fig.update_layout(
         title="Pesticide Exposure & PD Risk — Odds Ratios by Study",
         xaxis_title="Odds Ratio (>1 = increased risk)",
-        height=450
+        height=400, showlegend=False
     )
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown('<div class="section-header">Pesticide Risk by Gender</div>', unsafe_allow_html=True)
-    gender_pest = pd.DataFrame({
-        "Gender": ["Males", "Females", "Males", "Females"],
-        "Study": ["Payami", "Payami", "Moura", "Moura"],
-        "Odds_Ratio": [2.52, 2.85, 2.19, 2.43]
-    })
-    fig3 = px.bar(gender_pest, x="Study", y="Odds_Ratio", color="Gender",
-                  color_discrete_map={"Males": COLORS["primary"], "Females": COLORS["warning"]},
-                  barmode="group", title="Pesticide Risk by Gender — Females Consistently Higher")
-    fig3.add_hline(y=1, line_dash="dash", line_color=COLORS["muted"])
-    fig3 = apply_theme(fig3)
-    st.plotly_chart(fig3, use_container_width=True)
-    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>Note: This is the opposite pattern from smoking, where males showed a stronger (protective) effect — suggesting these risk factors interact differently with biological sex.</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color:{COLORS['muted']}; font-size:13px;'>Note: Women consistently show higher odds ratios than men across household pesticide studies — the opposite pattern from smoking, where males showed a stronger protective effect.</span>", unsafe_allow_html=True)
 
     st.markdown('<div class="section-header">Key Findings from Literature</div>', unsafe_allow_html=True)
     st.markdown("""
@@ -942,7 +883,8 @@ elif page == "Pesticide Exposure":
     st.markdown("""
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
     📖 <b>Data Sources:</b> Tanner et al., family-based case-control study (PMC2323015); Payami et al. and Moura et al., household pesticide studies 
-    (PMC11024193); Brazilian occupational cohort study (PMC7298782). Odds ratios and hazard ratios extracted directly from published, peer-reviewed findings.
+    (PMC11024193) — Males and Females categories are the average OR of the two studies; Brazilian occupational cohort study (PMC7298782). 
+    Odds ratios and hazard ratios extracted directly from published, peer-reviewed findings.
     </div>
     """, unsafe_allow_html=True)
 
@@ -961,27 +903,26 @@ elif page == "Lifestyle Factors":
     </div>
     """, unsafe_allow_html=True)
 
+    # Order matches the pitch-deck chart exactly (top-to-bottom: Regular Exercise, Ideal Sleep,
+    # Combined, Weekend Warrior, High PA Ages 35-39, High PA Past 10 Years). "Overall PA" (pooled
+    # meta-analysis) and "High Physical Activity" (Chen et al.) are excluded, per the deck.
     lifestyle_data = pd.DataFrame({
         "Study": [
-            "Overall PA — Pooled Cohort Meta-analysis\n(LaHue et al.)",
-            "High Physical Activity\n(UK Biobank, Chen et al.)",
-            "Ideal Sleep Pattern\n(UK Biobank, Chen et al.)",
-            "High PA + Ideal Sleep (Combined)\n(UK Biobank, Chen et al.)",
-            "High PA at Ages 35-39\n(NIH-AARP Cohort)",
             "High PA, Past 10 Years\n(NIH-AARP Cohort)",
-            "Active 'Weekend Warrior' Pattern\n(UK Biobank, Tsukita et al.)",
-            "Active Regular Exercise Pattern\n(UK Biobank, Tsukita et al.)",
+            "High PA at Ages 35-39\n(NIH-AARP Cohort)",
+            "Weekend Warrior Pattern\n(Lin et al., UK Biobank)",
+            "High PA + Ideal Sleep (Combined)\n(Chen et al., UK Biobank)",
+            "Ideal Sleep Pattern\n(Chen et al., UK Biobank)",
+            "Active Regular Exercise\n(Lin et al., UK Biobank)",
         ],
-        "Ratio": [0.66, 0.73, 0.78, 0.55, 0.62, 0.65, 0.58, 0.44],
-        "CI_Lower": [0.57, 0.64, 0.69, 0.44, 0.48, 0.51, 0.43, 0.34],
-        "CI_Upper": [0.78, 0.84, 0.87, 0.69, 0.81, 0.83, 0.78, 0.57],
+        "Ratio": [0.65, 0.62, 0.58, 0.55, 0.78, 0.44],
     })
 
     col1, col2, col3 = st.columns(3)
     for col, label, val, delta in [
         (col1, "Strongest Protection", "0.44x risk", "Active regular exercise"),
         (col2, "Combined Effect", "0.55x risk", "High activity + ideal sleep"),
-        (col3, "Studies Reviewed", "6 cohorts", "All show risk reduction"),
+        (col3, "Studies Reviewed", "3 cohorts", "All show risk reduction"),
     ]:
         with col:
             st.markdown(f"""
@@ -992,24 +933,19 @@ elif page == "Lifestyle Factors":
             </div>
             """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-header">Hazard / Odds Ratios Across Studies (with 95% Confidence Intervals)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Hazard / Odds Ratios Across Studies</div>', unsafe_allow_html=True)
 
-    life_sorted = lifestyle_data.sort_values("Ratio", ascending=False)
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=life_sorted["Ratio"], y=life_sorted["Study"],
-        error_x=dict(
-            type="data", symmetric=False,
-            array=life_sorted["CI_Upper"] - life_sorted["Ratio"],
-            arrayminus=life_sorted["Ratio"] - life_sorted["CI_Lower"]
-        ),
-        mode="markers", marker=dict(size=14, color=COLORS["secondary"]), name="Hazard/Odds Ratio"
+    fig.add_trace(go.Bar(
+        x=lifestyle_data["Ratio"], y=lifestyle_data["Study"], orientation="h",
+        marker_color=COLORS["secondary"],
+        text=lifestyle_data["Ratio"], textposition="outside"
     ))
     fig.add_vline(x=1, line_dash="dash", line_color=COLORS["muted"], annotation_text="No effect (Ratio=1)")
     fig.update_layout(
         title="Physical Activity & Sleep — Effect on PD Risk (Ratio < 1 = Protective)",
         xaxis_title="Hazard / Odds Ratio (<1 = reduced risk)",
-        height=480
+        height=420, showlegend=False
     )
     fig = apply_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
@@ -1017,7 +953,7 @@ elif page == "Lifestyle Factors":
     st.markdown('<div class="section-header">Key Findings from Literature</div>', unsafe_allow_html=True)
     st.markdown("""
     - **Consistent protective effect**: Every study reviewed shows physical activity reduces PD risk, with ratios ranging from 0.44 to 0.78 — meaning 22-56% lower risk depending on activity level and study design.
-    - **Dose-response relationship**: Higher activity levels (180+ MET-hours/week) show stronger protection than moderate activity, particularly in midlife (ages 45-64).
+    - **Dose-response relationship**: Higher activity levels show stronger protection than moderate activity, particularly in midlife.
     - **Sleep matters too**: An "ideal" sleep pattern independently reduces PD risk by 22% (HR = 0.78), and combining high activity with good sleep produces the strongest effect — a 45% risk reduction (HR = 0.55).
     - **Sedentary time is harmful**: High sedentary time combined with low activity shows dramatically increased PD risk (HR up to 5.59) in accelerometer-based studies.
     - **Exercise pattern flexibility**: Both "weekend warrior" (concentrated activity) and regularly distributed exercise show comparable protective effects — consistency in some form matters more than a specific schedule.
@@ -1025,9 +961,8 @@ elif page == "Lifestyle Factors":
 
     st.markdown("""
     <div style="margin-top:12px; padding:16px; background:#1a1d27; border:1px solid #2d3147; border-radius:10px; color:#7a7f9a; font-size:13px;">
-    📖 <b>Data Sources:</b> LaHue et al., systematic review meta-analysis (Frontiers in Aging Neuroscience, 2020); Chen et al., UK Biobank cohort study, 
-    409,923 participants (Neuroepidemiology, 2023/PMC10867998); NIH-AARP Diet and Health Study, 213,701 participants (PMC2918886); Tsukita et al., 
-    UK Biobank accelerometer study, 89,400 participants (npj Digital Medicine, 2024). All ratios are hazard or odds ratios from peer-reviewed cohort 
-    and case-control studies, adjusted for age, sex, smoking, and other confounders.
+    📖 <b>Data Sources:</b> Chen LH, Sun SY, Li G, et al., UK Biobank cohort study, 339,666 participants (International Journal of Behavioral Nutrition 
+    and Physical Activity, 2024, PMC10867998); NIH-AARP Diet and Health Study cohort; Lin F, Lin Y, Chen L, et al., UK Biobank accelerometer study 
+    (npj Digital Medicine, 2024). All ratios are hazard or odds ratios from peer-reviewed cohort studies, adjusted for age, sex, smoking, and other confounders.
     </div>
     """, unsafe_allow_html=True)
